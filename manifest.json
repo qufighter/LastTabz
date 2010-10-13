@@ -1,5 +1,5 @@
 {
-   "description": "Provides a menu with your previous tabs in order of access - quickly flip back to all your recent tabs with ease - never loose track of you last tab again!",
+   "description": "Provides a menu with your previous tabs in order of access - never loose track of you last tab again!",
    "name": "LASTabZ",
    "browser_action": {
 	    "default_icon": "icon19.png",
@@ -15,5 +15,5 @@
    "permissions": [
 				  "http://vidzbigger.com/","tabs"
 				],
-   "version": "0.0.2.9"
+   "version": "0.0.3.0"
 }

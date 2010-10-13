@@ -74,7 +74,7 @@
 //  		}
   	}
 
-  	function switchToTab(ev,who){if(ev.button==1){remTab(who);return;};if(who.name=='LOAD_HIST'){who.childNodes[1].innerText='';loadRest(true);return;};if(who.name=='LOAD_MORE'){who.childNodes[1].innerText='';loadAllTabs();return;};if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAllTabs(false,true);return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};document.body.style.marginRight='auto';document.body.addEventListener('mousedown',function(){window.close},true);chrome.tabs.update(who.name-0,{selected:true},function(){/*changed tab*/})}
+  	function switchToTab(ev,who){if(ev.button==1){remTab(who);return;};if(who.name=='LOAD_HIST'){who.childNodes[1].innerText='';loadRest(true);return;};if(who.name=='LOAD_MORE'){who.childNodes[1].innerText='';loadAllTabs();return;};if(who.name=='LOAD_DNS'){who.childNodes[1].innerText='';loadAllTabs(false,false,true);return;};if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAllTabs(false,true);return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};document.body.style.marginRight='auto';document.body.addEventListener('mousedown',function(){window.close},true);chrome.tabs.update(who.name-0,{selected:true},function(){/*changed tab*/})}
   	function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
   	function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove(who.name-0,function(){/*changed tab*/})}
   	var tabsGotten=[],tabsLoaded=[],curTab=0;
@@ -166,9 +166,10 @@
 	  }
 	   //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
 	  //if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAlphabetical();return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};
-	  function loadAllTabs(defaultOrdering,alphaOrdering){
+	  function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 	  	if(typeof(defaultOrdering)=='undefined')defaultOrdering=false;
 	  	if(typeof(alphaOrdering)=='undefined')alphaOrdering=false;
+	  	if(typeof(urlOrdering)=='undefined')urlOrdering=false;
 
 	  	
 	  	
@@ -179,7 +180,7 @@
 	  		var l=tabs.length;
 	  		var i=l-1;
 	  		
-	  		if(defaultOrdering||alphaOrdering){
+	  		if(defaultOrdering||alphaOrdering||urlOrdering){
 		  		clearAllReset();
 		  		cdn=function(i,l){return i<l;}
 		  		inc=1,i=0;
@@ -188,6 +189,15 @@
 		  	if(alphaOrdering){
 		  		tabs.sort(function(a, b){
 					 var nameA=a.title.toLowerCase(), nameB=b.title.toLowerCase()
+					 if (nameA < nameB) //sort string ascending
+					  return -1 
+					 if (nameA > nameB)
+					  return 1
+					 return 0 //default return value (no sorting)
+					})
+		  	}else if(urlOrdering){
+		  		tabs.sort(function(a, b){
+					 var nameA=a.url.toLowerCase(), nameB=b.url.toLowerCase()
 					 if (nameA < nameB) //sort string ascending
 					  return -1 
 					 if (nameA > nameB)
@@ -207,7 +217,7 @@
 	  		//if(defaultOrdering||alphaOrdering)
 	  		addRemainingTabsLink(true);
 	  		
-	  		if(alphaOrdering){//get sort back
+	  		if(alphaOrdering||urlOrdering){//get sort back
 	  			chrome.tabs.getAllInWindow(null, function(t) {
 	  				allInWindow=t;
 	  			});
@@ -230,9 +240,10 @@
 	  			if(tab){
 		  			maekTab(tab);
 		  		}curTab++;//go
-		  		if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
+		  		//if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
 					//console.log(curTab, tabsGotten.length-2)
 	  		}
+	  		addRemainingTabsLink();
 	  	});
 	  }
 	  function createf1(){
@@ -255,8 +266,9 @@
 						tabsGotten.push(tabs[i]-0);
 					}
 				}
-				if(tabsGotten.length>0)loadnexttab();
-				else addRemainingTabsLink();
+				//if(tabsGotten.length>0)
+				loadnexttab();
+				//else addRemainingTabsLink();
 			});
 	  }
 	  function loadnexttab(){
@@ -279,6 +291,7 @@
 	  	if(document.getElementById('LOAD_MORE'))document.getElementById('LOAD_MORE').parentNode.removeChild(document.getElementById('LOAD_MORE'));
 	  	if(document.getElementById('LOAD_ALPHA'))document.getElementById('LOAD_ALPHA').parentNode.removeChild(document.getElementById('LOAD_ALPHA'));
 	  	if(document.getElementById('LOAD_DEFAULT'))document.getElementById('LOAD_DEFAULT').parentNode.removeChild(document.getElementById('LOAD_DEFAULT'));
+			if(document.getElementById('LOAD_DNS'))document.getElementById('LOAD_DNS').parentNode.removeChild(document.getElementById('LOAD_DNS'));
 
 	  	if(!skipShowRemaining){
 		  	var n=document.getElementById('f1').cloneNode(true);
@@ -312,7 +325,18 @@
 			n.childNodes[1].name="LOAD_ALPHA";
 			n.childNodes[1].title="Sort tabs alphabetically by tab title";
 			n.childNodes[1].childNodes[0].style.display="none";
-			n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort Alphabetically...';
+			n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort by Title...';
+			document.body.appendChild(n);
+			
+			var n=document.getElementById('f1').cloneNode(true);
+			n.id='LOAD_DNS';
+			n.className="thinrow";
+			n.firstChild.style.display="none";
+			n.childNodes[1].className="";
+			n.childNodes[1].name="LOAD_DNS";
+			n.childNodes[1].title="Sort tabs alphabetically by their URL";
+			n.childNodes[1].childNodes[0].style.display="none";
+			n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort By Domain...';
 			document.body.appendChild(n);
 			
 			var n=document.getElementById('f1').cloneNode(true);
@@ -323,7 +347,7 @@
 			n.childNodes[1].name="LOAD_DEFAULT";
 			n.childNodes[1].title="Show tabs in their default left to right order";
 			n.childNodes[1].childNodes[0].style.display="none";
-			n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort by Tab Order...';
+			n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show Tab Order...';
 			document.body.appendChild(n);
 			
 			
