@@ -66,7 +66,7 @@
 		function updateIcon(windowId){
 			if(!dothumbs)return;
 			var curIdx = selwIdx[windowId];
-			if( !selWindows[windowId][curIdx-1] ){
+			if( !selWindows[windowId][curIdx-1] || !tabImgs[selWindows[windowId][curIdx-1]] ){
 				//console.log(windowId+'nol'+curIdx+' '+selWindows[windowId][curIdx+1]);
 				return;
 			}
@@ -83,6 +83,7 @@
 			    //ictx.scale(0.9,0.9);
 					ictx.drawImage(favimg,3,2);
 					chrome.browserAction.setIcon({imageData:ictx.getImageData(0, 0, 19, 19)});//update icon (to be configurable)
+			  	icvs=null;
 			  }
 				favimg.src=tabImgs[tab.id];//tab.favIconUrl;
 				});
@@ -250,7 +251,9 @@
 			var ctx = cvs.getContext("2d");
 			ctx.scale(thscale,thscale);
 			ctx.drawImage(theImg,0,0);
-			return (ctx.getImageData(0, 0, cvs.width, cvs.height));
+			var id=ctx.getImageData(0, 0, cvs.width, cvs.height);
+			cvs=null;
+			return (id);
 		}
   </script>
   <body onload="fromPrefs()"><img id="pim" /><canvas id="example" ></canvas></body>

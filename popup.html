@@ -2,10 +2,10 @@
 	<style>
 		div{position:relative;margin:0px;padding:0px;margin-left:19px;}
 		body{font-family:arial,sans-serif;font-size:12px;margin:0px;padding:0px;overflow-y:hidden;overflow-x:hidden;}
-		a{text-decoration:none;position:relative;display:block;border:1px solid #FFF;border-bottom:1px solid grey;min-width:160px;max-width:260px;height:18px;margin;2px;padding:3px;overflow:hidden;}
-		a:hover{color:#338;background-color:#AAF;border:1px solid #338;}
+		a{text-decoration:none;position:relative;display:block;border-radius:6px;border:1px solid #FFF;border-bottom:1px solid grey;min-width:160px;max-width:260px;height:18px;margin;2px;padding:3px;overflow:hidden;}
+		a:hover{color:#338;background-color:#AAF;border:1px solid #338;border-radius:9px;}
 		.sel{background-color:#EEF;}
-		.closex{position:absolute;left:-16px;top:5px;cursor:pointer;}
+		.closex{position:absolute;left:-16px;top:5px;cursor:pointer;border-radius:4px;padding:1px;padding-right:0px;}
 		.ms{margin:4px;}
 		.prvw{position:fixed;top:0px;left:0px;}
 		#f1{display:none;}
@@ -197,6 +197,7 @@
 					})
 		  	}else if(urlOrdering){
 		  		tabs.sort(function(a, b){
+		  			//.replace('http://','').replace('https://','')
 					 var nameA=a.url.toLowerCase(), nameB=b.url.toLowerCase()
 					 if (nameA < nameB) //sort string ascending
 					  return -1 
