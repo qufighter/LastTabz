@@ -1,12 +1,15 @@
 {
+   "manifest_version": 2,
    "description": "Provides a menu with your previous tabs in order of access - never loose track of you last tab again!",
    "name": "LASTabZ",
    "browser_action": {
 	    "default_icon": "icon19.png",
 	    "default_title": "LASTTabZ",
-	    "popup": "popup.html"
+	    "default_popup": "popup.html"
 	  },
-   "background_page": "background.html",
+   "background": {
+    "scripts": ["background.js"]
+		},
    "options_page": "options.html",
    "icons": { "16": "icon16.png",
            "32": "icon32.png",
@@ -15,5 +18,5 @@
    "permissions": [
 				  "http://vidzbigger.com/","tabs"
 				],
-   "version": "0.0.3.0"
+   "version": "0.0.3.2"
 }
