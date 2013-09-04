@@ -184,7 +184,7 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 
 	
 	
-	//chrome.tabs.getAllInWindow(null, function(tabs) {
+	//chrome.tabs.getAllI<input type="button" >nWindow(null, function(tabs) {
 		var tabs=allInWindow;
 		var cdn=function(i,l){return i>-1;}
 		var inc=-1;
@@ -343,7 +343,7 @@ function addRemainingTabsLink(skipShowRemaining){
 	document.body.appendChild(n);
 	dovents(n)
 	
-	var n=document.getElementById('f1').cloneNode(true);
+	n=document.getElementById('f1').cloneNode(true);
 	n.id='LOAD_DNS';
 	n.className="thinrow";
 	n.firstChild.style.display="none";
@@ -355,7 +355,7 @@ function addRemainingTabsLink(skipShowRemaining){
 	document.body.appendChild(n);
 	dovents(n)
 	
-	var n=document.getElementById('f1').cloneNode(true);
+	n=document.getElementById('f1').cloneNode(true);
 	n.id='LOAD_DEFAULT';
 	n.className="thinrow";
 	n.firstChild.style.display="none";
@@ -363,18 +363,18 @@ function addRemainingTabsLink(skipShowRemaining){
 	n.childNodes[1].name="LOAD_DEFAULT";
 	n.childNodes[1].title="Show tabs in their default left to right order";
 	n.childNodes[1].childNodes[0].style.display="none";
-	n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show Tab Order...';
+	n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show Tabz Order...';
 	document.body.appendChild(n);
 	dovents(n)
+	
+	n=document.createElement('input');
+	n.setAttribute('type','text');
+	n.setAttribute('value','Search');
+	document.body.appendChild(n);
+	n.select();
 	
 }
 
 document.addEventListener('DOMContentLoaded', function () {
 	cl();
-  document.getElementById('remTabs').addEventListener('click', remTabs);
-  document.getElementById('f1').addEventListener('mousedown', pressTab);
-  document.getElementById('f1').addEventListener('mouseup', relesTab);
-  document.getElementById('f1').addEventListener('mouseover', mouseOverTab);
-  document.getElementById('f1').addEventListener('mouseout', mouseOutTab);
-  document.getElementById('f1').addEventListener('click', switchToTab);
 });

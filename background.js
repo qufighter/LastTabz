@@ -114,12 +114,15 @@ function setCurrentWindow(tabId,selectInfo){
 	}
 	historyAdd(currentWindow,tabId);
 }
-chrome.tabs.onSelectionChanged.addListener(setCurrentWindow);
-chrome.windows.onFocusChanged.addListener(function(windowId){
-	chrome.tabs.getSelected(windowId,function(tab){
-		setCurrentWindow(tab.id,{windowId:tab.windowId})
-	})
+chrome.tabs.onActivated.addListener(function(aInfo){
+	setCurrentWindow(aInfo.tabId,aInfo.windowId);
 });
+//chrome.tabs.onSelectionChanged.addListener(setCurrentWindow);
+//chrome.windows.onFocusChanged.addListener(function(windowId){
+//	chrome.tabs.getSelected(windowId,function(tab){
+//		setCurrentWindow(tab.id,{windowId:tab.windowId})
+//	})
+//});
 
 chrome.tabs.onUpdated.addListener(function(tabId,changeInfo,tab) {
 	if(dothumbs)captureImage(tab.windowId,tabId);//while user navigates optionally capture screenshot updates

@@ -16,7 +16,7 @@
            "48": "icon48.png",
           "128": "icon128.png" },
    "permissions": [
-				  "http://vidzbigger.com/","tabs"
+				  "*://*/*","tabs"
 				],
    "version": "0.0.3.2"
 }
