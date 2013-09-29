@@ -15,8 +15,6 @@
            "32": "icon32.png",
            "48": "icon48.png",
           "128": "icon128.png" },
-   "permissions": [
-				  "*://*/*","tabs","chrome://*"
-				],
-   "version": "0.0.3.2"
+   "permissions": ["*://*/*","tabs"],
+   "version": "0.0.4.0"
 }
