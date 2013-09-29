@@ -15,6 +15,6 @@
            "32": "icon32.png",
            "48": "icon48.png",
           "128": "icon128.png" },
-   "permissions": ["*://*/*","tabs"],
+   "permissions": ["<all_urls>","tabs"],
    "version": "0.0.4.1"
 }
