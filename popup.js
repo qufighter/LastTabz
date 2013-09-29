@@ -1,4 +1,14 @@
 var pressedTabs=[],ecurTab=0,closeMode=false;
+function getEventTarget(ev){
+	ev = ev || event;
+	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
+	if(targ !=null){
+	    if(targ.nodeType==3)
+	        targ=targ.parentNode;
+	}
+	return targ;
+}
+
 function getEventTargetA(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
@@ -8,6 +18,29 @@ function getEventTargetA(ev){
 	}
 	if(targ.nodeName != 'A')return targ.parentNode;
 	return targ;
+}
+function preventEventDefault(ev){
+	ev = ev || event;
+	if(ev.preventDefault)ev.preventDefault();
+	ev.returnValue=false;
+	return false;
+}
+function stopEventPropagation(ev){
+	ev = ev || event;
+	if(ev.stopPropagation)ev.stopPropagation();
+	ev.cancelBubble=true;
+	ev.cancel=true;
+}
+function cancelEvent(e){
+  e = e ? e : window.event;
+  if(e.stopPropagation)
+    e.stopPropagation();
+  if(e.preventDefault)
+    e.preventDefault();
+  e.cancelBubble = true;
+  e.cancel = true;
+  e.returnValue = false;
+  return false;
 }
 function addBorder(who){
 	who.previousSibling.style.border='1px solid red';
@@ -74,11 +107,24 @@ function mouseOutTab(ev,who){
 
 function switchToTab(ev,who){
 	who=getEventTargetA(ev);
-	if(ev.button==1){remTab(who);return;};if(who.name=='LOAD_HIST'){who.childNodes[1].innerText='';loadRest(true);return;};if(who.name=='LOAD_MORE'){who.childNodes[1].innerText='';loadAllTabs();return;};if(who.name=='LOAD_DNS'){who.childNodes[1].innerText='';loadAllTabs(false,false,true);return;};if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAllTabs(false,true);return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};document.body.style.marginRight='auto';document.body.addEventListener('mousedown',function(){window.close},true);
+	if(ev.button==1){remTab(who);return;};
+	if(who.name=='LOAD_HIST'){loadRest(true);return;};
+	if(who.name=='LOAD_MORE'){loadAllTabs();return;};
+	if(who.name=='LOAD_DNS'){loadAllTabs(false,false,true);return;};
+	if(who.name=='LOAD_ALPHA'){loadAllTabs(false,true);return;};
+	if(who.name=='LOAD_DEFAULT'){loadAllTabs(true);return;};
+	document.body.style.marginRight='auto';
+	document.body.addEventListener('mousedown',function(){window.close},true);
 	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/})
 }
 function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
-function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove(who.name-0,function(){/*changed tab*/})}
+function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){/*changed tab*/})}
+function closeX(ev){
+	who=getEventTarget(ev);
+	console.log(who);
+	remTab(who);
+	cancelEvent(ev);
+}
 var tabsGotten=[],tabsLoaded=[],curTab=0;
 var lockPr=false,curpr=0,hasAdd=false;
 var doThumbs = ((localStorage["dothumbs"]=='true')?true:false);
@@ -137,51 +183,44 @@ if(doThumbs){
 		//},10);
 	}
 }
-function dovents(n){
-	n.addEventListener('mousedown', pressTab);
-  n.addEventListener('mouseup', relesTab);
-  n.addEventListener('mouseover', mouseOverTab);
-  n.addEventListener('mouseout', mouseOutTab);
-  n.addEventListener('click', switchToTab);
-}
 
 function maekTab(tab,b){
 	if(curTab>=15){
 		document.body.style.overflowY='auto';
 		document.body.style.marginRight='16px';
 	}
-	var n=document.getElementById('f1').cloneNode(true);
-	n.id='';
-	n.firstChild.title='Close \n'+tab.url;
-	n.firstChild.name=tab.id;
-	n.childNodes[1].className=(tab.selected?"sel":"");
-	n.childNodes[1].name=tab.id;
+
 	var turl=tab.url;
 	if(turl.length > 256)turl=turl.substr(0,128)+'... ...'+turl.substr(turl.length-128);
-	n.childNodes[1].title=tab.title+' \n\n'+turl;
-	n.childNodes[1].childNodes[0].src=tab.favIconUrl;
-	n.childNodes[1].childNodes[1].innerText='\u00a0'+tab.title.replace('http://','').replace('www.','').substr(0,offstringcut);//fars vor
-	//if(b)document.body.insertBefore(n,document.getElementById('LOAD_MORE'));
-	document.body.appendChild(n);
-	dovents(n);
-	tabsLoaded[tab.id]=true;
-	//curTab++;//keep counting //jackass // why did you hide this in a function // why are you looking at this // it belongs here
-	//return;//dont return until now
+
+	var n = Cr.elm('div',{events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('img',{title:'Close \n'+tab.url,name:tab.id,class:'closex',src:'close.png',event:['click',closeX,true]}),
+		Cr.elm('a',
+						{class:(tab.selected?"sel":""),
+								name:tab.id,
+								title:tab.title+' \n\n'+turl
+						},[
+							Cr.elm('img',{src:tab.favIconUrl,class:'favi',border:0}),
+							Cr.elm('span',{},[
+								Cr.txt(tab.title.replace('http://','').replace('www.','').substr(0,offstringcut))
+							])
+						]
+		)
+	],document.body);
+	tabsLoaded[tab.id] = true;
 }
 function clearAllReset(){
 	tabsLoaded=[];
-	var n=document.getElementById('f1').cloneNode(true);
-	document.body.innerHTML='';
-	document.body.appendChild(n);
+	Cr.empty(document.body);
 	curTab=0;
 }
  //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
 //if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAlphabetical();return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};
-function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
+function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering,searchWord){
 	if(typeof(defaultOrdering)=='undefined')defaultOrdering=false;
 	if(typeof(alphaOrdering)=='undefined')alphaOrdering=false;
 	if(typeof(urlOrdering)=='undefined')urlOrdering=false;
-
+	if(typeof(searchWord)=='undefined')searchWord=false;
 	
 	
 	//chrome.tabs.getAllI<input type="button" >nWindow(null, function(tabs) {
@@ -221,8 +260,10 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 		//for( i=tabs.length-1; cdn(i,l); i+=inc ){
 		for( ; cdn(i,l); i+=inc ){
 			var tab=tabs[i]
-			if(tab && !tabsLoaded[tab.id]){ 
-  			maekTab(tab);
+			if(tab && !tabsLoaded[tab.id]){
+				if(searchWord && tab.title.indexOf(searchWord) > -1)
+	  			maekTab(tab);
+	  		else if(!searchWord)maekTab(tab);
   		}curTab++;//stop
 		}
 		
@@ -295,84 +336,64 @@ function loadnexttab(){
 	//}
 	//if(curTab < tabsGotten.length )window.setTimeout(loadnexttab,14);
 }
+
+function selectSelf(ev){
+	getEventTarget(ev).select();
+}
+function wordSearchTabTitles(ev){
+	loadAllTabs(1,0,0,document.getElementById('title-search').value)
+}
+
 function addRemainingTabsLink(skipShowRemaining){
 	if(typeof(skipShowRemaining)=='undefined')skipShowRemaining=false;
 
 	//if(hasAdd)return;hasAdd=true;
 	//use maektab to do this, but no
-	if(document.getElementById('LOAD_MORE'))document.getElementById('LOAD_MORE').parentNode.removeChild(document.getElementById('LOAD_MORE'));
-	if(document.getElementById('LOAD_ALPHA'))document.getElementById('LOAD_ALPHA').parentNode.removeChild(document.getElementById('LOAD_ALPHA'));
-	if(document.getElementById('LOAD_DEFAULT'))document.getElementById('LOAD_DEFAULT').parentNode.removeChild(document.getElementById('LOAD_DEFAULT'));
-	if(document.getElementById('LOAD_DNS'))document.getElementById('LOAD_DNS').parentNode.removeChild(document.getElementById('LOAD_DNS'));
+	if( skipShowRemaining ){
+		if(document.getElementById('LOAD_MORE'))document.getElementById('LOAD_MORE').parentNode.removeChild(document.getElementById('LOAD_MORE'));
+		if(document.getElementById('LOAD_ALPHA'))document.getElementById('LOAD_ALPHA').parentNode.removeChild(document.getElementById('LOAD_ALPHA'));
+		if(document.getElementById('LOAD_DEFAULT'))document.getElementById('LOAD_DEFAULT').parentNode.removeChild(document.getElementById('LOAD_DEFAULT'));
+		if(document.getElementById('LOAD_DNS'))document.getElementById('LOAD_DNS').parentNode.removeChild(document.getElementById('LOAD_DNS'));
+		if(document.getElementById('LOAD_SEARCH'))document.getElementById('LOAD_SEARCH').parentNode.removeChild(document.getElementById('LOAD_SEARCH'));
+	}
 
 	if(!skipShowRemaining){
-  	var n=document.getElementById('f1').cloneNode(true);
-		n.id='LOAD_MORE';
-		n.className="thinrow";
-		n.firstChild.style.display="none";
-		n.childNodes[1].className="";
-		n.childNodes[1].name="LOAD_MORE";
-		n.childNodes[1].title="Show non-history tabs for this window";
-		n.childNodes[1].childNodes[0].style.display="none";
-		n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show Remaining Tabs...';
-		document.body.appendChild(n);
-		dovents(n);
-		//n.childNodes[1].addEventListener('mouseover',function(e){who=e.target;if(who.name=='LOAD_MORE')switchToTab(e,who)},true);
+		Cr.elm('div',{id:'LOAD_MORE',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+			Cr.elm('a',{name:'LOAD_MORE',title:"Show non-history tabs for this window"},[
+				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Remaining Tabs...')])
+			])
+		],document.body);
   }else{
-  	var n=document.getElementById('f1').cloneNode(true);
-		n.id='LOAD_HIST';
-		n.className="thinrow";
-		n.firstChild.style.display="none";
-		n.childNodes[1].className="";
-		n.childNodes[1].name="LOAD_HIST";
-		n.childNodes[1].title="Shows historic tabs in order of their last viewing.  Tabs you were just in will be listed at the top.";
-		n.childNodes[1].childNodes[0].style.display="none";
-		n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show History Order...';
-		document.body.appendChild(n);
-		dovents(n)
+		Cr.elm('div',{id:'LOAD_HIST',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+			Cr.elm('a',{name:'LOAD_HIST',title:"Shows historic tabs in order of their last viewing.  Tabs you were just in will be listed at the top."},[
+				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show History Order...')])
+			])
+		],document.body);
   }
-	var n=document.getElementById('f1').cloneNode(true);
-	n.id='LOAD_ALPHA';
-	n.className="thinrow";
-	n.firstChild.style.display="none";
-	n.childNodes[1].className="";
-	n.childNodes[1].name="LOAD_ALPHA";
-	n.childNodes[1].title="Sort tabs alphabetically by tab title";
-	n.childNodes[1].childNodes[0].style.display="none";
-	n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort by Title...';
-	document.body.appendChild(n);
-	dovents(n)
-	
-	n=document.getElementById('f1').cloneNode(true);
-	n.id='LOAD_DNS';
-	n.className="thinrow";
-	n.firstChild.style.display="none";
-	n.childNodes[1].className="";
-	n.childNodes[1].name="LOAD_DNS";
-	n.childNodes[1].title="Sort tabs alphabetically by their URL";
-	n.childNodes[1].childNodes[0].style.display="none";
-	n.childNodes[1].childNodes[1].innerText='\u00a0'+'Sort By Domain...';
-	document.body.appendChild(n);
-	dovents(n)
-	
-	n=document.getElementById('f1').cloneNode(true);
-	n.id='LOAD_DEFAULT';
-	n.className="thinrow";
-	n.firstChild.style.display="none";
-	n.childNodes[1].className="";
-	n.childNodes[1].name="LOAD_DEFAULT";
-	n.childNodes[1].title="Show tabs in their default left to right order";
-	n.childNodes[1].childNodes[0].style.display="none";
-	n.childNodes[1].childNodes[1].innerText='\u00a0'+'Show Tabz Order...';
-	document.body.appendChild(n);
-	dovents(n)
-	
-	n=document.createElement('input');
-	n.setAttribute('type','text');
-	n.setAttribute('value','Search');
-	document.body.appendChild(n);
-	n.select();
-	
+
+	Cr.elm('div',{id:'LOAD_ALPHA',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('a',{name:'LOAD_ALPHA',title:"Sort tabs alphabetically by tab title"},[
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Title...')])
+		])
+	],document.body);
+
+	Cr.elm('div',{id:'LOAD_DNS',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('a',{name:'LOAD_DNS',title:"Sort tabs alphabetically by their URL"},[
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort By Domain...')])
+		])
+	],document.body);
+
+	Cr.elm('div',{id:'LOAD_DEFAULT',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('a',{name:'LOAD_DEFAULT',title:"Show tabs in their default left to right order"},[
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Tabs in Order...')])
+		])
+	],document.body);
+
+	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('input',{id:'title-search',type:'text',value:'Search Tab Titles',events:[['mouseover',selectSelf],['keyup',wordSearchTabTitles]]})
+	],document.body);
+
+	sf.firstChild.select();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
