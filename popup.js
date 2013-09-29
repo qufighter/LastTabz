@@ -122,7 +122,7 @@ function switchToTab(ev,who){
 	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/})
 }
 function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
-function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){/*changed tab*/})}
+function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){getCurrentTabs()})}
 function closeX(ev){
 	who=getEventTarget(ev);
 	console.log(who);
@@ -220,12 +220,19 @@ function clearAllReset(){
 }
  //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
 //if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAlphabetical();return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};
-function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
-	if(typeof(defaultOrdering)=='undefined')defaultOrdering=false;
-	if(typeof(alphaOrdering)=='undefined')alphaOrdering=false;
-	if(typeof(urlOrdering)=='undefined')urlOrdering=false;
-	if(typeof(searchWord)=='undefined')searchWord=false;
-	
+
+
+function loadAllTabs(_defaultOrdering,_alphaOrdering,_urlOrdering){
+	if(typeof(_defaultOrdering)=='undefined')_defaultOrdering=false;
+	if(typeof(_alphaOrdering)=='undefined')_alphaOrdering=false;
+	if(typeof(_urlOrdering)=='undefined')_urlOrdering=false;
+	defaultOrdering=_defaultOrdering,
+	alphaOrdering=_alphaOrdering,
+	urlOrdering=_urlOrdering;
+	actuallyLoadAllTabs();
+}
+var defaultOrdering=0,alphaOrdering=0,urlOrdering=0;
+function actuallyLoadAllTabs(){
 	var searchWord=false;
 	if( searchTitlesDefault != _ge('title-search').value ){
 		searchWord=_ge('title-search').value.toLowerCase()
@@ -238,7 +245,7 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 		var l=tabs.length;
 		var i=l-1;
 		
-		if(defaultOrdering||alphaOrdering||urlOrdering){
+		if(searchWord||defaultOrdering||alphaOrdering||urlOrdering){
   		clearAllReset();
   		cdn=function(i,l){return i<l;}
   		inc=1,i=0;
@@ -279,13 +286,16 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 		showRemainingTabsButton(true);
 		
 		if(alphaOrdering||urlOrdering){//get sort back
-			chrome.tabs.getAllInWindow(null, function(t) {
-				allInWindow=t;
-			});
+			getCurrentTabs();
 		}
 	//});
 }
 var allInWindow=[];
+function getCurrentTabs(){
+	chrome.tabs.getAllInWindow(null, function(t) {
+		allInWindow=t;
+	});
+}
 function loadRest(doReset){
 	if(typeof(doReset)=='undefined')doReset=false;
 	if(doReset)clearAllReset();
@@ -337,7 +347,7 @@ function selectSelf(ev){
 	getEventTarget(ev).select();
 }
 function wordSearchTabTitles(ev){
-	loadAllTabs(1,0,0,_ge('title-search').value.toLowerCase())
+	actuallyLoadAllTabs();//searches leaving current sort applied
 }
 
 function showRemainingTabsButton(is_on){
