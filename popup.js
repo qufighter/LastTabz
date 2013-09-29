@@ -271,7 +271,7 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering,searchWord){
 		}
 		
 		//if(defaultOrdering||alphaOrdering)
-		showRemainingTabsButton();
+		showRemainingTabsButton(true);
 		
 		if(alphaOrdering||urlOrdering){//get sort back
 			chrome.tabs.getAllInWindow(null, function(t) {
@@ -335,8 +335,7 @@ function wordSearchTabTitles(ev){
 	loadAllTabs(1,0,0,_ge('title-search').value)
 }
 
-function showRemainingTabsButton(){
-	var is_on=false;
+function showRemainingTabsButton(is_on){
 	if(_ge('LOAD_MORE'))is_on=true;
 	if(_ge('LOAD_MORE'))_ge('LOAD_MORE').parentNode.removeChild(_ge('LOAD_MORE'));
 	if(_ge('LOAD_HIST'))_ge('LOAD_HIST').parentNode.removeChild(_ge('LOAD_HIST'));
@@ -359,7 +358,6 @@ function showRemainingTabsButton(){
 }
 
 function addRemainingTabsLink(){
-
 	showRemainingTabsButton();
 
 	Cr.elm('div',{id:'LOAD_ALPHA',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
