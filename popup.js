@@ -197,7 +197,7 @@ function maekTab(tab,b){
 	var turl=tab.url;
 	if(turl.length > 256)turl=turl.substr(0,128)+'... ...'+turl.substr(turl.length-128);
 
-	var n = Cr.elm('div',{events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+	var n = Cr.elm('div',{class:'row',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('img',{title:'Close \n'+tab.url,name:tab.id,class:'closex',src:'close.png',event:['click',closeX,true]}),
 		Cr.elm('a',
 						{class:(tab.selected?"sel":""),
