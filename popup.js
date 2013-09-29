@@ -209,12 +209,12 @@ function maekTab(tab,b){
 							])
 						]
 		)
-	],document.body);
+	],_ge('tabs'));
 	tabsLoaded[tab.id] = true;
 }
 function clearAllReset(){
 	tabsLoaded=[];
-	Cr.empty(document.body);
+	Cr.empty(_ge('tabs'));
 	curTab=0;
 }
  //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
@@ -271,7 +271,7 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering,searchWord){
 		}
 		
 		//if(defaultOrdering||alphaOrdering)
-		addRemainingTabsLink(true);
+		showRemainingTabsButton();
 		
 		if(alphaOrdering||urlOrdering){//get sort back
 			chrome.tabs.getAllInWindow(null, function(t) {
@@ -299,7 +299,7 @@ function loadRest(doReset){
   		//if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
 			//console.log(curTab, tabsGotten.length-2)
 		}
-		addRemainingTabsLink();
+		if(doReset)showRemainingTabsButton();
 	});
 }
 function createf1(){
@@ -311,6 +311,7 @@ function createf1(){
 	}
 }
 function cl(){
+	addRemainingTabsLink();
 	chrome.extension.sendRequest({greeting: "gettabs"}, function(response) {
 //document.body.innerHTML+=response.farewell;
 		if(response.farewell==undefined){addRemainingTabsLink();return;};
@@ -323,21 +324,8 @@ function cl(){
 			}
 		}
 		//if(tabsGotten.length>0)
-		loadnexttab();
-		//else addRemainingTabsLink();
+		loadRest();
 	});
-}
-function loadnexttab(){
-//			chrome.tabs.get(tabsGotten[curTab], function(tab) {
-//				if(tab){
-//					maekTab(tab);
-//				}
-//			});
-//			curTab++;
-//			if(curTab > 4 ){
-		loadRest();return;
-	//}
-	//if(curTab < tabsGotten.length )window.setTimeout(loadnexttab,14);
 }
 
 function selectSelf(ev){
@@ -347,54 +335,54 @@ function wordSearchTabTitles(ev){
 	loadAllTabs(1,0,0,_ge('title-search').value)
 }
 
-function addRemainingTabsLink(skipShowRemaining){
-	if(typeof(skipShowRemaining)=='undefined')skipShowRemaining=false;
-
-	//if(hasAdd)return;hasAdd=true;
-	//use maektab to do this, but no
-	if( skipShowRemaining ){
-		if(_ge('LOAD_MORE'))_ge('LOAD_MORE').parentNode.removeChild(_ge('LOAD_MORE'));
-		if(_ge('LOAD_ALPHA'))_ge('LOAD_ALPHA').parentNode.removeChild(_ge('LOAD_ALPHA'));
-		if(_ge('LOAD_DEFAULT'))_ge('LOAD_DEFAULT').parentNode.removeChild(_ge('LOAD_DEFAULT'));
-		if(_ge('LOAD_DNS'))_ge('LOAD_DNS').parentNode.removeChild(_ge('LOAD_DNS'));
-		if(_ge('LOAD_SEARCH'))_ge('LOAD_SEARCH').parentNode.removeChild(_ge('LOAD_SEARCH'));
-	}
-
-	if(!skipShowRemaining){
-		Cr.elm('div',{id:'LOAD_MORE',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
-			Cr.elm('a',{name:'LOAD_MORE',title:"Show non-history tabs for this window"},[
-				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Remaining Tabs...')])
-			])
-		],document.body);
-  }else{
-		Cr.elm('div',{id:'LOAD_HIST',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+function showRemainingTabsButton(){
+	var is_on=false;
+	if(_ge('LOAD_MORE'))is_on=true;
+	if(_ge('LOAD_MORE'))_ge('LOAD_MORE').parentNode.removeChild(_ge('LOAD_MORE'));
+	if(_ge('LOAD_HIST'))_ge('LOAD_HIST').parentNode.removeChild(_ge('LOAD_HIST'));
+	
+	if(is_on){
+		var n=Cr.elm('div',{id:'LOAD_HIST',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 			Cr.elm('a',{name:'LOAD_HIST',title:"Shows historic tabs in order of their last viewing.  Tabs you were just in will be listed at the top."},[
 				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show History Order...')])
 			])
-		],document.body);
-  }
+		]);
+		Cr.insertNode(n,_ge('controls'),_ge('controls').firstChild);
+	}else{
+		var n=Cr.elm('div',{id:'LOAD_MORE',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+			Cr.elm('a',{name:'LOAD_MORE',title:"Show non-history tabs for this window"},[
+				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Remaining Tabs...')])
+			])
+		]);
+		Cr.insertNode(n,_ge('controls'),_ge('controls').firstChild);
+	}
+}
+
+function addRemainingTabsLink(){
+
+	showRemainingTabsButton();
 
 	Cr.elm('div',{id:'LOAD_ALPHA',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_ALPHA',title:"Sort tabs alphabetically by tab title"},[
 			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Title...')])
 		])
-	],document.body);
+	],_ge('controls'));
 
 	Cr.elm('div',{id:'LOAD_DNS',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_DNS',title:"Sort tabs alphabetically by their URL"},[
 			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort By Domain...')])
 		])
-	],document.body);
+	],_ge('controls'));
 
 	Cr.elm('div',{id:'LOAD_DEFAULT',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_DEFAULT',title:"Show tabs in their default left to right order"},[
 			Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Tabs in Order...')])
 		])
-	],document.body);
+	],_ge('controls'));
 
 	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('input',{id:'title-search',type:'text',value:'Search Tab Titles',events:[['mouseover',selectSelf],['keyup',wordSearchTabTitles]]})
-	],document.body);
+	],_ge('controls'));
 
 	sf.firstChild.select();
 }
