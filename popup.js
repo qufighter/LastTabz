@@ -264,9 +264,9 @@ function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering,searchWord){
 		for( ; cdn(i,l); i+=inc ){
 			var tab=tabs[i]
 			if(tab && !tabsLoaded[tab.id]){
-				if(searchWord && tab.title.indexOf(searchWord) > -1)
-	  			maekTab(tab);
-	  		else if(!searchWord)maekTab(tab);
+				if(searchWord){
+					if(tab.title.toLowerCase().indexOf(searchWord) > -1)maekTab(tab);
+				}else maekTab(tab);
   		}curTab++;//stop
 		}
 		
@@ -332,7 +332,7 @@ function selectSelf(ev){
 	getEventTarget(ev).select();
 }
 function wordSearchTabTitles(ev){
-	loadAllTabs(1,0,0,_ge('title-search').value)
+	loadAllTabs(1,0,0,_ge('title-search').value.toLowerCase())
 }
 
 function showRemainingTabsButton(is_on){
