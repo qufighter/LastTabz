@@ -205,7 +205,7 @@ function cleanupEmptyImages(){
 	tabImgs=nsw;
 }
 
-chrome.extension.onRequest.addListener(
+chrome.runtime.onMessage.addListener(
 function(request, sender, sendResponse){
     if (request.greeting == "gettabs" && selWindows[currentWindow]){
       sendResponse({farewell: selWindows[currentWindow]});

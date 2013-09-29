@@ -135,7 +135,7 @@ var doThumbs = ((localStorage["dothumbs"]=='true')?true:false);
 var showFirstItem = ((localStorage["showCurrentTab"]=='true')?true:false);
 var justback = ((localStorage["justback"]=='true')?true:false);
 if(justback){
-	chrome.extension.sendRequest({greeting: "lastab"}, function(response) {})
+	chrome.runtime.sendMessage({greeting: "lastab"}, function(response) {})
 	window.close();
 	return;
 }
@@ -161,7 +161,7 @@ if(doThumbs){
 	    }return { y: _y, x: _x };
 	}
 	function pre(who){
-		chrome.extension.sendRequest({greeting: "gettabimg",tabId:(who.name-0)}, function(response) {
+		chrome.runtime.sendMessage({greeting: "gettabimg",tabId:(who.name-0)}, function(response) {
 			if(response.scr){
 				if(! _ge('pim')){
 					var p=document.createElement('img');
@@ -327,7 +327,7 @@ function createf1(){
 }
 function cl(){
 	addRemainingTabsLink();
-	chrome.extension.sendRequest({greeting: "gettabs"}, function(response) {
+	chrome.runtime.sendMessage({greeting: "gettabs"}, function(response) {
 //document.body.innerHTML+=response.farewell;
 		if(response.farewell==undefined){addRemainingTabsLink();return;};
 		createf1();

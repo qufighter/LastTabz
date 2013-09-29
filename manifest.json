@@ -16,5 +16,5 @@
            "48": "icon48.png",
           "128": "icon128.png" },
    "permissions": ["*://*/*","tabs"],
-   "version": "0.0.4.0"
+   "version": "0.0.4.1"
 }
