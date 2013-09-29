@@ -1,4 +1,5 @@
 var pressedTabs=[],ecurTab=0,closeMode=false;
+var searchTitlesDefault='Search Tab Titles';
 function getEventTarget(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
@@ -219,12 +220,16 @@ function clearAllReset(){
 }
  //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
 //if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAlphabetical();return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};
-function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering,searchWord){
+function loadAllTabs(defaultOrdering,alphaOrdering,urlOrdering){
 	if(typeof(defaultOrdering)=='undefined')defaultOrdering=false;
 	if(typeof(alphaOrdering)=='undefined')alphaOrdering=false;
 	if(typeof(urlOrdering)=='undefined')urlOrdering=false;
 	if(typeof(searchWord)=='undefined')searchWord=false;
 	
+	var searchWord=false;
+	if( searchTitlesDefault != _ge('title-search').value ){
+		searchWord=_ge('title-search').value.toLowerCase()
+	}
 	
 	//chrome.tabs.getAllI<input type="button" >nWindow(null, function(tabs) {
 		var tabs=allInWindow;
@@ -360,6 +365,11 @@ function showRemainingTabsButton(is_on){
 function addRemainingTabsLink(){
 	showRemainingTabsButton();
 
+	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('input',{id:'title-search',type:'text',value:searchTitlesDefault,events:[['mouseover',selectSelf],['keyup',wordSearchTabTitles]]})
+	],_ge('controls'));
+	sf.firstChild.select();
+
 	Cr.elm('div',{id:'LOAD_ALPHA',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_ALPHA',title:"Sort tabs alphabetically by tab title"},[
 			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Title...')])
@@ -368,21 +378,15 @@ function addRemainingTabsLink(){
 
 	Cr.elm('div',{id:'LOAD_DNS',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_DNS',title:"Sort tabs alphabetically by their URL"},[
-			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort By Domain...')])
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Domain...')])
 		])
 	],_ge('controls'));
 
 	Cr.elm('div',{id:'LOAD_DEFAULT',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_DEFAULT',title:"Show tabs in their default left to right order"},[
-			Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Tabs in Order...')])
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Tab Order...')])
 		])
 	],_ge('controls'));
-
-	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
-		Cr.elm('input',{id:'title-search',type:'text',value:'Search Tab Titles',events:[['mouseover',selectSelf],['keyup',wordSearchTabTitles]]})
-	],_ge('controls'));
-
-	sf.firstChild.select();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
