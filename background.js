@@ -17,9 +17,9 @@ function fromPrefs(){
 	onewin = ((localStorage["onewin"]=='true')?true:false);
 	justback = ((localStorage["justback"]=='true')?true:false);
 	if(justback){
-		chrome.browserAction.setIcon({path:'icon19back.png'});
+		chrome.browserAction.setIcon({path:'img/icon19back.png'});
 	}else{
-		chrome.browserAction.setIcon({path:'icon19.png'});
+		chrome.browserAction.setIcon({path:'img/icon19.png'});
 	}
 	if(onewin){
 		currentWindow=1;
@@ -59,7 +59,7 @@ function clearDups(dup,arr,winid){
 }
 
 var iconimg=new Image();
-iconimg.src="icon19.png";
+iconimg.src="img/icon19.png";
 
 function updateIcon(windowId){
 	if(!dothumbs)return;

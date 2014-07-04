@@ -3,7 +3,7 @@
    "description": "Provides a menu with your previous tabs in order of access - never loose track of you last tab again!",
    "name": "LASTabZ",
    "browser_action": {
-	    "default_icon": "icon19.png",
+	    "default_icon": "img/icon19.png",
 	    "default_title": "LASTTabZ",
 	    "default_popup": "popup.html"
 	  },
@@ -11,10 +11,10 @@
     "scripts": ["background.js"]
 		},
    "options_page": "options.html",
-   "icons": { "16": "icon16.png",
-           "32": "icon32.png",
-           "48": "icon48.png",
-          "128": "icon128.png" },
+   "icons": { "16": "img/icon16.png",
+           "32": "img/icon32.png",
+           "48": "img/icon48.png",
+          "128": "img/icon128.png" },
    "permissions": ["<all_urls>","tabs"],
    "version": "0.0.4.2"
 }
