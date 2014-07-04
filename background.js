@@ -228,33 +228,19 @@ function(request, sender, sendResponse){
 });
 function captureImage(winId,tabId){
 	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
-		pim.src=dataUrl;
-		window.setTimeout(function(){
+		pim.onload=function(){
 			var img = pim;
-			img.width = thumbwidth;
-			img.height = thumbwidth*thHeiRatio;
-	  	var cvs = example;
-	  	cvs.width = thumbwidth;
+			var cvs = example;
+			cvs.width = thumbwidth;
 			cvs.height = thumbwidth*thHeiRatio;
-	  	var ctx = cvs.getContext("2d")
-	  	ctx.clearRect(0,0,img.width,img.height);
-	  	ctx.putImageData(getImageDataFromImage(img), 0, 0);
-	  	tabImgs[tabId]=cvs.toDataURL("image/jpeg",0.3);
+			var ctx = cvs.getContext("2d")
+			ctx.clearRect(0,0,cvs.width,cvs.height);
+			ctx.drawImage(img, 0, 0, img.naturalWidth*0.5,img.naturalHeight*0.5);
+			tabImgs[tabId]=cvs.toDataURL("image/jpeg",1.0);
 			pim.src='';
-		},255);
+		};
+		pim.src=dataUrl;
 	});
-}
-function getImageDataFromImage(idOrElement){
-	var theImg = (typeof(idOrElement)=='string')? document.getElementById(idOrElement):idOrElement;
-	var cvs = document.createElement('canvas');
-	cvs.width = thumbwidth;
-	cvs.height = thumbwidth*thHeiRatio;
-	var ctx = cvs.getContext("2d");
-	ctx.scale(thscale,thscale);
-	ctx.drawImage(theImg,0,0);
-	var id=ctx.getImageData(0, 0, cvs.width, cvs.height);
-	cvs=null;
-	return (id);
 }
 
 var pim = document.createElement('img');
