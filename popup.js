@@ -4,8 +4,8 @@ function getEventTarget(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
 	if(targ !=null){
-	    if(targ.nodeType==3)
-	        targ=targ.parentNode;
+			if(targ.nodeType==3)
+					targ=targ.parentNode;
 	}
 	return targ;
 }
@@ -14,8 +14,8 @@ function getEventTargetA(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
 	if(targ !=null){
-	    if(targ.nodeType==3)
-	        targ=targ.parentNode;
+			if(targ.nodeType==3)
+					targ=targ.parentNode;
 	}
 	if(targ.nodeName != 'A')return targ.parentNode;
 	return targ;
@@ -33,15 +33,15 @@ function stopEventPropagation(ev){
 	ev.cancel=true;
 }
 function cancelEvent(e){
-  e = e ? e : window.event;
-  if(e.stopPropagation)
-    e.stopPropagation();
-  if(e.preventDefault)
-    e.preventDefault();
-  e.cancelBubble = true;
-  e.cancel = true;
-  e.returnValue = false;
-  return false;
+	e = e ? e : window.event;
+	if(e.stopPropagation)
+		e.stopPropagation();
+	if(e.preventDefault)
+		e.preventDefault();
+	e.cancelBubble = true;
+	e.cancel = true;
+	e.returnValue = false;
+	return false;
 }
 function _ge(l){
 	return document.getElementById(l);
@@ -144,21 +144,21 @@ function pr(who){};
 if(doThumbs){
 	function pr(who){
 		//window.setTimeout(function(){
-  		if(!lockPr && curpr!=who){
-  			pre(who);
-  			lockPr=true;
-  		}
-  		curpr=who;
-  		window.setTimeout(function(){lockPr=false;if(curpr==who)pre(who);},50);
-  	//},100);
+			if(!lockPr && curpr!=who){
+				pre(who);
+				lockPr=true;
+			}
+			curpr=who;
+			window.setTimeout(function(){lockPr=false;if(curpr==who)pre(who);},50);
+		//},100);
 	}
 	function getOffset( el ){
-		  var _x=0,_y=0;
-	    while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-	    		_x+=el.offsetLeft;// - el.scrollLeft;
-	    		_y+=el.offsetTop;// - el.scrollTop;  
-	        el = el.offsetParent;
-	    }return { y: _y, x: _x };
+			var _x=0,_y=0;
+			while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+					_x+=el.offsetLeft;// - el.scrollLeft;
+					_y+=el.offsetTop;// - el.scrollTop;
+					el = el.offsetParent;
+			}return { y: _y, x: _x };
 	}
 	function pre(who){
 		chrome.runtime.sendMessage({greeting: "gettabimg",tabId:(who.name-0)}, function(response) {
@@ -246,31 +246,31 @@ function actuallyLoadAllTabs(){
 		var i=l-1;
 		
 		if(searchWord||defaultOrdering||alphaOrdering||urlOrdering){
-  		clearAllReset();
-  		cdn=function(i,l){return i<l;}
-  		inc=1,i=0;
-  	}
-  	
-  	if(alphaOrdering){
-  		tabs.sort(function(a, b){
+			clearAllReset();
+			cdn=function(i,l){return i<l;}
+			inc=1,i=0;
+		}
+
+		if(alphaOrdering){
+			tabs.sort(function(a, b){
 			 var nameA=a.title.toLowerCase(), nameB=b.title.toLowerCase()
 			 if (nameA < nameB) //sort string ascending
-			  return -1 
+				return -1
 			 if (nameA > nameB)
-			  return 1
+				return 1
 			 return 0 //default return value (no sorting)
 			})
-  	}else if(urlOrdering){
-  		tabs.sort(function(a, b){
-  			//.replace('http://','').replace('https://','')
+		}else if(urlOrdering){
+			tabs.sort(function(a, b){
+				//.replace('http://','').replace('https://','')
 			 var nameA=a.url.toLowerCase(), nameB=b.url.toLowerCase()
 			 if (nameA < nameB) //sort string ascending
-			  return -1 
+				return -1
 			 if (nameA > nameB)
-			  return 1
+				return 1
 			 return 0 //default return value (no sorting)
 			})
-  	}
+		}
 		
 		//for( i=tabs.length-1; cdn(i,l); i+=inc ){
 		for( ; cdn(i,l); i+=inc ){
@@ -279,7 +279,7 @@ function actuallyLoadAllTabs(){
 				if(searchWord){
 					if(tab.title.toLowerCase().indexOf(searchWord) > -1)maekTab(tab);
 				}else maekTab(tab);
-  		}curTab++;//stop
+			}curTab++;//stop
 		}
 		
 		//if(defaultOrdering||alphaOrdering)
@@ -309,9 +309,9 @@ function loadRest(doReset){
 			var tab=allTabsnow[tabsGotten[curTab]];
 			//console.log('--');
 			if(tab){
-  			maekTab(tab);
-  		}curTab++;//go
-  		//if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
+				maekTab(tab);
+			}curTab++;//go
+			//if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
 			//console.log(curTab, tabsGotten.length-2)
 		}
 		if(doReset)showRemainingTabsButton();
