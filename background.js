@@ -206,13 +206,14 @@ function cleanupEmptyImages(){
 	tabImgs=nsw;
 }
 
-function goToLastTab(){
-	chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-1],{selected:true},function(){/*changed tab*/})
+function goToLastTab(index){
+	if(!index)index=1;
+	chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-index],{selected:true},function(){/*changed tab*/})
 }
 
 chrome.commands.onCommand.addListener(function(command){
-	if(command=='navigate-last-tab'){
-		goToLastTab();
+	if(command.substr(0,18)=='navigate-last-tab-'){
+		goToLastTab(command.substr(18)-0);
 	}
 });
 
