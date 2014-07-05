@@ -62,6 +62,7 @@ var iconimg=new Image();
 iconimg.src="img/icon19.png";
 
 function updateIcon(windowId){
+	return;
 	if(!dothumbs)return;
 	var curIdx = selwIdx[windowId];
 	if( !selWindows[windowId][curIdx-1] || !tabImgs[selWindows[windowId][curIdx-1]] ){
@@ -236,18 +237,47 @@ function(request, sender, sendResponse){
 			sendResponse({});
 });
 function captureImage(winId,tabId){
+	// we only want to capture the header
+	chrome.tabs.executeScript(tabId, {code:'window.scrollY'}, function(res){
+		if( !res || res[0] == 0 ){
+			reallyCaptureImage(winId,tabId);
+		}
+	});
+}
+function reallyCaptureImage(winId,tabId){
 	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
 		pim.onload=function(){
 			var img = pim;
 			var cvs = example;
 			cvs.width = thumbwidth;
 			cvs.height = thumbwidth*thHeiRatio;
+			var dwidth = img.naturalWidth*0.75, dheight = img.naturalHeight*0.75;
 			var ctx = cvs.getContext("2d")
 			ctx.clearRect(0,0,cvs.width,cvs.height);
-			ctx.drawImage(img, 0, 0, img.naturalWidth*0.5,img.naturalHeight*0.5);
-
-			//check left edge to see if there is no website on image
-
+			ctx.drawImage(img, 0,0, img.naturalWidth,img.naturalHeight, 0,0, dwidth,dheight);
+			var tctx = tiny.getContext("2d");
+			//drawImage (image, sx,sy, sWidth,sHeight, dx,dy, dWidth,dHeight) //CANVAS
+			//check left edge to see if there is no logo/site on image
+			var offset = 0;
+			var variation = 0;
+			var dat, dat2, dat3, avg=[];
+			var ypos=cvs.height*0.25, ypos2=cvs.height*0.5, ypos3=cvs.height*0.75, yheight=cvs.height*0.25;
+			while( variation < 15 && offset < img.naturalWidth/4){
+				tctx.drawImage(cvs, 5,ypos, 1,yheight, 0,0, 1,1)
+				dat = tctx.getImageData(0,0, 1,1).data;
+				tctx.drawImage(cvs, 5,ypos2, 1,yheight, 0,0, 1,1)
+				dat2 = tctx.getImageData(0,0, 1,1).data;
+				tctx.drawImage(cvs, 5,ypos3, 1,yheight, 0,0, 1,1)
+				dat3 = tctx.getImageData(0,0, 1,1).data;
+				avg = [(dat[0]+dat2[0]+dat3[0])*0.333, (dat[1]+dat2[1]+dat3[1])*0.333, (dat[2]+dat2[2]+dat3[2])*0.333]
+				variation = Math.abs(dat[0]-avg[0]) + Math.abs(dat[1]-avg[1]) + Math.abs(dat[2]-avg[2])
+				//console.log(variation);
+				offset += 5;
+				ctx.drawImage(img, offset,0, img.naturalWidth,img.naturalHeight, 0,0, dwidth,dheight);
+			}
+			if( offset >= img.naturalWidth/4){
+				ctx.drawImage(img, img.naturalWidth*0.25,0, img.naturalWidth*0.5,img.naturalWidth*0.5*thHeiRatio, 0,0, cvs.width,cvs.height);
+			}
 			tabImgs[tabId]=cvs.toDataURL("image/jpeg",1.0);
 			pim.src='';
 		};
@@ -257,4 +287,7 @@ function captureImage(winId,tabId){
 
 var pim = document.createElement('img');
 var example = document.createElement('canvas');
+var tiny = document.createElement('canvas');
+tiny.width = 1;
+tiny.height = 1;
 fromPrefs()
