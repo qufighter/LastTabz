@@ -77,12 +77,12 @@ function updateIcon(windowId){
 		var ictx = icvs.getContext("2d");
 		favimg=new Image();
 		favimg.onload = function(){
-	    ictx.drawImage(iconimg,0,0);
-	    //ictx.scale(0.9,0.9);
+			ictx.drawImage(iconimg,0,0);
+			//ictx.scale(0.9,0.9);
 			ictx.drawImage(favimg,3,2);
 			chrome.browserAction.setIcon({imageData:ictx.getImageData(0, 0, 19, 19)});//update icon (to be configurable)
-	  	icvs=null;
-	  }
+			icvs=null;
+		}
 		favimg.src=tabImgs[tab.id];//tab.favIconUrl;
 		});
 }
@@ -206,7 +206,7 @@ function cleanupEmptyImages(){
 }
 
 function goToLastTab(){
-  chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-1],{selected:true},function(){/*changed tab*/})
+	chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-1],{selected:true},function(){/*changed tab*/})
 }
 
 chrome.commands.onCommand.addListener(function(command){
@@ -217,23 +217,23 @@ chrome.commands.onCommand.addListener(function(command){
 
 chrome.runtime.onMessage.addListener(
 function(request, sender, sendResponse){
-    if (request.greeting == "gettabs" && selWindows[currentWindow]){
-      sendResponse({farewell: selWindows[currentWindow]});
-    }else if(request.greeting == "lastab"){
-      goToLastTab();
-    	sendResponse({});
-    }else if(request.greeting == "gettabimg"){
-    	if(tabImgs[request.tabId]){
-    		sendResponse({scr: tabImgs[request.tabId]});
-    	}else{
-    		sendResponse({});
-    	}
-    }else if(request.greeting == "getallwindowshistory"){
-      sendResponse({farewell:selWindows});//mode not
-    }else if(request.greeting == "reloadprefs"){
-    	fromPrefs();sendResponse({});
-    }else
-    	sendResponse({});
+		if (request.greeting == "gettabs" && selWindows[currentWindow]){
+			sendResponse({farewell: selWindows[currentWindow]});
+		}else if(request.greeting == "lastab"){
+			goToLastTab();
+			sendResponse({});
+		}else if(request.greeting == "gettabimg"){
+			if(tabImgs[request.tabId]){
+				sendResponse({scr: tabImgs[request.tabId]});
+			}else{
+				sendResponse({});
+			}
+		}else if(request.greeting == "getallwindowshistory"){
+			sendResponse({farewell:selWindows});//mode not
+		}else if(request.greeting == "reloadprefs"){
+			fromPrefs();sendResponse({});
+		}else
+			sendResponse({});
 });
 function captureImage(winId,tabId){
 	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
@@ -245,6 +245,9 @@ function captureImage(winId,tabId){
 			var ctx = cvs.getContext("2d")
 			ctx.clearRect(0,0,cvs.width,cvs.height);
 			ctx.drawImage(img, 0, 0, img.naturalWidth*0.5,img.naturalHeight*0.5);
+
+			//check left edge to see if there is no website on image
+
 			tabImgs[tabId]=cvs.toDataURL("image/jpeg",1.0);
 			pim.src='';
 		};
