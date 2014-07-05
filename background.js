@@ -205,12 +205,22 @@ function cleanupEmptyImages(){
 	tabImgs=nsw;
 }
 
+function goToLastTab(){
+  chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-1],{selected:true},function(){/*changed tab*/})
+}
+
+chrome.commands.onCommand.addListener(function(command){
+	if(command=='navigate-last-tab'){
+		goToLastTab();
+	}
+});
+
 chrome.runtime.onMessage.addListener(
 function(request, sender, sendResponse){
     if (request.greeting == "gettabs" && selWindows[currentWindow]){
       sendResponse({farewell: selWindows[currentWindow]});
     }else if(request.greeting == "lastab"){
-    	chrome.tabs.update(selWindows[currentWindow][selwIdx[currentWindow]-1],{selected:true},function(){/*changed tab*/})
+      goToLastTab();
     	sendResponse({});
     }else if(request.greeting == "gettabimg"){
     	if(tabImgs[request.tabId]){
@@ -224,7 +234,6 @@ function(request, sender, sendResponse){
     	fromPrefs();sendResponse({});
     }else
     	sendResponse({});
-  
 });
 function captureImage(winId,tabId){
 	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
