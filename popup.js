@@ -1,5 +1,5 @@
 var pressedTabs=[],ecurTab=0,closeMode=false;
-var searchTitlesDefault='Search Tab Titles';
+var searchTitlesDefault='Search Title & Url';
 function getEventTarget(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
@@ -80,7 +80,7 @@ function relesTab(ev){
 	}
 }
 function mouseOverTab(ev,who,isfirst){
-	who=getEventTargetA(ev);
+	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
 	if(who.parentNode.className!='thinrow' && closeMode && ev.button==1 && ecurTab!=who){
 		if(hasBorder(who)){
 			remBorder(who);
@@ -110,16 +110,14 @@ function mouseOutTab(ev,who){
 }
 
 function switchToTab(ev,who){
-	who=getEventTargetA(ev);
+	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
 	if(ev.button==1){remTab(who);return;};
 	if(who.name=='LOAD_HIST'){loadRest(true);return;};
 	if(who.name=='LOAD_MORE'){loadAllTabs();return;};
 	if(who.name=='LOAD_DNS'){loadAllTabs(false,false,true);return;};
 	if(who.name=='LOAD_ALPHA'){loadAllTabs(false,true);return;};
 	if(who.name=='LOAD_DEFAULT'){loadAllTabs(true);return;};
-	document.body.style.marginRight='auto';
-	document.body.addEventListener('mousedown',function(){window.close},true);
-	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/})
+	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/window.close();})
 }
 function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
 function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){getCurrentTabs()})}
@@ -232,14 +230,15 @@ function loadAllTabs(_defaultOrdering,_alphaOrdering,_urlOrdering){
 	actuallyLoadAllTabs();
 }
 var defaultOrdering=0,alphaOrdering=0,urlOrdering=0;
-function actuallyLoadAllTabs(){
+function actuallyLoadAllTabs(navToTopMatch){
 	var searchWord=false;
 	if( searchTitlesDefault != _ge('title-search').value ){
-		searchWord=_ge('title-search').value.toLowerCase()
+		searchWord=_ge('title-search').value.toLowerCase().split(' ');
 	}
 	
 	//chrome.tabs.getAllI<input type="button" >nWindow(null, function(tabs) {
 		var tabs=allInWindow;
+		var tabResults = [];
 		var cdn=function(i,l){return i>-1;}
 		var inc=-1;
 		var l=tabs.length;
@@ -277,8 +276,12 @@ function actuallyLoadAllTabs(){
 			var tab=tabs[i]
 			if(tab && !tabsLoaded[tab.id]){
 				if(searchWord){
-					if(tab.title.toLowerCase().indexOf(searchWord) > -1)maekTab(tab);
-				}else maekTab(tab);
+					var searchHaystack = tab.title.toLowerCase()+' '+tab.url.toLowerCase();
+					for(s=0,sl=searchWord.length;s<sl; s++){
+						if(searchHaystack.indexOf(searchWord[s]) < 0) break;
+					}
+					if(s==sl) tabResults.push(tab),maekTab(tab);
+				}else tabResults.push(tab),maekTab(tab);
 			}curTab++;//stop
 		}
 		
@@ -287,6 +290,14 @@ function actuallyLoadAllTabs(){
 		
 		if(alphaOrdering||urlOrdering){//get sort back
 			getCurrentTabs();
+		}
+
+		if( tabResults.length ){ //show thumbnail for first result
+			mouseOverTab({}, document.getElementById('tabs').childNodes[0].getElementsByTagName('a')[0])
+		}
+
+		if( navToTopMatch ){
+			switchToTab({},{name:tabResults[0].id});
 		}
 	//});
 }
@@ -347,6 +358,15 @@ function selectSelf(ev){
 	getEventTarget(ev).select();
 }
 function wordSearchTabTitles(ev){
+	console.log(ev.keyCode);
+	var kc = ev.keyCode;
+	if( kc == 13 ){//enter
+		return actuallyLoadAllTabs(true);
+	}else if(kc == 38){//up
+		cancelEvent(ev);return;
+	}else if(kc == 40){//down
+		cancelEvent(ev);return;
+	}
 	actuallyLoadAllTabs();//searches leaving current sort applied
 }
 
