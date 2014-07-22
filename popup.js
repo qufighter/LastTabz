@@ -135,7 +135,6 @@ var justback = ((localStorage["justback"]=='true')?true:false);
 if(justback){
 	chrome.runtime.sendMessage({greeting: "lastab"}, function(response) {})
 	window.close();
-	return;
 }
 var offstringcut = 21;//truncate titles will be ocfigurable as wol wildth
 function pr(who){};

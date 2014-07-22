@@ -41,5 +41,5 @@
     "128": "img/icon128.png"
   },
   "permissions": ["<all_urls>","tabs"],
-  "version": "0.0.4.3"
+  "version": "0.0.4.4"
 }
