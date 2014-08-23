@@ -116,8 +116,15 @@ function setCurrentWindow(tabId,selectInfo){
 	historyAdd(currentWindow,tabId);
 }
 chrome.tabs.onActivated.addListener(function(aInfo){
-	setCurrentWindow(aInfo.tabId,aInfo.windowId);
+	setCurrentWindow(aInfo.tabId,aInfo);
 });
+
+chrome.windows.onFocusChanged.addListener(function(windowId){
+	if(windowId!= chrome.windows.WINDOW_ID_NONE ){
+		currentWindow = windowId;
+	}
+});
+
 //chrome.tabs.onSelectionChanged.addListener(setCurrentWindow);
 //chrome.windows.onFocusChanged.addListener(function(windowId){
 //	chrome.tabs.getSelected(windowId,function(tab){
