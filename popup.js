@@ -79,6 +79,7 @@ function relesTab(ev){
 		remTabs(who);
 	}
 }
+var lastOverTab = {className:''}
 function mouseOverTab(ev,who,isfirst){
 	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
 	if(who.parentNode.className!='thinrow' && closeMode && ev.button==1 && ecurTab!=who){
@@ -92,6 +93,11 @@ function mouseOverTab(ev,who,isfirst){
 		ecurTab=who;
 	}
 
+	if( who.parentNode.className=='row' ){
+		lastOverTab.className=lastOverTab.className.replace(' reticule','');
+		who.className=who.className.replace(' reticule','') + ' reticule';
+		lastOverTab=who;
+	}
 	pr(who)
 //  		if(ev.button==1){
 //  			if(isfirst || pressedTab==who){
@@ -102,7 +108,11 @@ function mouseOverTab(ev,who,isfirst){
 //			}
 }
 function mouseOutTab(ev,who){
-	who=getEventTargetA(ev);
+	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
+
+	if( who.parentNode.className=='row' ){
+		lastOverTab.className=lastOverTab.className.replace(' reticule','');
+	}
 //  		if(ev.button==1){
 //  			who.previousSibling.style.border='none';
 //  			who.style.border='';
@@ -228,7 +238,7 @@ function loadAllTabs(_defaultOrdering,_alphaOrdering,_urlOrdering){
 	urlOrdering=_urlOrdering;
 	actuallyLoadAllTabs();
 }
-var defaultOrdering=0,alphaOrdering=0,urlOrdering=0;
+var defaultOrdering=0,alphaOrdering=0,urlOrdering=0,selectedMatchIndex=0;
 function actuallyLoadAllTabs(navToTopMatch){
 	var searchWord=false;
 	if( searchTitlesDefault != _ge('title-search').value ){
@@ -291,12 +301,15 @@ function actuallyLoadAllTabs(navToTopMatch){
 			getCurrentTabs();
 		}
 
+		if( selectedMatchIndex < 0 ) selectedMatchIndex = 0;
+		if( selectedMatchIndex >= tabResults.length ) selectedMatchIndex = tabResults.length-1;
+
 		if( tabResults.length ){ //show thumbnail for first result
-			mouseOverTab({}, document.getElementById('tabs').childNodes[0].getElementsByTagName('a')[0])
+			mouseOverTab({}, document.getElementById('tabs').childNodes[selectedMatchIndex].getElementsByTagName('a')[0])
 		}
 
 		if( navToTopMatch ){
-			switchToTab({},{name:tabResults[0].id});
+			switchToTab({},{name:tabResults[selectedMatchIndex].id});
 		}
 	//});
 }
@@ -362,11 +375,13 @@ function wordSearchTabTitles(ev){
 	if( kc == 13 ){//enter
 		return actuallyLoadAllTabs(true);
 	}else if(kc == 38){//up
-		cancelEvent(ev);return;
+		selectedMatchIndex--;
+		cancelEvent(ev);
 	}else if(kc == 40){//down
-		cancelEvent(ev);return;
+		selectedMatchIndex++;
+		cancelEvent(ev);
 	}
-	actuallyLoadAllTabs();//searches leaving current sort applied
+	setTimeout(actuallyLoadAllTabs,10);
 }
 
 function showRemainingTabsButton(is_on){
@@ -395,7 +410,7 @@ function addRemainingTabsLink(){
 	showRemainingTabsButton();
 
 	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
-		Cr.elm('input',{id:'title-search',type:'text',value:searchTitlesDefault,events:[['mouseover',selectSelf],['keyup',wordSearchTabTitles]]})
+		Cr.elm('input',{id:'title-search',type:'text',value:searchTitlesDefault,events:[['mouseover',selectSelf],['keydown',wordSearchTabTitles]]})
 	],_ge('controls'));
 	sf.firstChild.select();
 
