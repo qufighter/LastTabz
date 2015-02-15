@@ -98,6 +98,8 @@ function mouseOverTab(ev,who,isfirst){
 		who.className=who.className.replace(' reticule','') + ' reticule';
 		lastOverTab=who;
 	}
+
+	who.scrollIntoViewIfNeeded();
 	pr(who)
 //  		if(ev.button==1){
 //  			if(isfirst || pressedTab==who){
@@ -119,14 +121,18 @@ function mouseOutTab(ev,who){
 //  		}
 }
 
+function clearSearch(){
+	_ge('title-search').value=searchTitlesDefault;
+}
+
 function switchToTab(ev,who){
 	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
 	if(ev.button==1){remTab(who);return;};
-	if(who.name=='LOAD_HIST'){loadRest(true);return;};
-	if(who.name=='LOAD_MORE'){loadAllTabs();return;};
-	if(who.name=='LOAD_DNS'){loadAllTabs(false,false,true);return;};
-	if(who.name=='LOAD_ALPHA'){loadAllTabs(false,true);return;};
-	if(who.name=='LOAD_DEFAULT'){loadAllTabs(true);return;};
+	if(who.name=='LOAD_HIST'){clearSearch();loadRest(true);return;};
+	if(who.name=='LOAD_MORE'){clearSearch();loadAllTabs();return;};
+	if(who.name=='LOAD_DNS'){clearSearch();loadAllTabs(false,false,true);return;};
+	if(who.name=='LOAD_ALPHA'){clearSearch();loadAllTabs(false,true);return;};
+	if(who.name=='LOAD_DEFAULT'){clearSearch();loadAllTabs(true);return;};
 	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/window.close();})
 }
 function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
@@ -137,7 +143,8 @@ function closeX(ev){
 	remTab(who);
 	cancelEvent(ev);
 }
-var tabsGotten=[],tabsLoaded=[],curTab=0;
+/*tabsGotten means historyTabs*/
+var tabsGotten=[],tabsLoaded=[],tabResults=[],curTab=0;
 var lockPr=false,curpr=0,hasAdd=false;
 var doThumbs = ((localStorage["dothumbs"]=='true')?true:false);
 var showFirstItem = ((localStorage["showCurrentTab"]=='true')?true:false);
@@ -196,6 +203,7 @@ if(doThumbs){
 }
 
 function maekTab(tab,b){
+	if( tabsLoaded[tab.id] ){console.log('tab alredy loaded', tab, b);return;}
 	if(curTab>=15){
 		document.body.style.overflowY='auto';
 		document.body.style.marginRight='16px';
@@ -218,10 +226,12 @@ function maekTab(tab,b){
 						]
 		)
 	],_ge('tabs'));
+	tabResults.push(tab);
 	tabsLoaded[tab.id] = true;
 }
 function clearAllReset(){
 	tabsLoaded=[];
+	tabResults=[];
 	Cr.empty(_ge('tabs'));
 	curTab=0;
 }
@@ -243,11 +253,11 @@ function actuallyLoadAllTabs(navToTopMatch){
 	var searchWord=false;
 	if( searchTitlesDefault != _ge('title-search').value ){
 		searchWord=_ge('title-search').value.toLowerCase().split(' ');
+		localStorage["lastSearch"]=_ge('title-search').value;
 	}
 	
 	//chrome.tabs.getAllI<input type="button" >nWindow(null, function(tabs) {
 		var tabs=allInWindow;
-		var tabResults = [];
 		var cdn=function(i,l){return i>-1;}
 		var inc=-1;
 		var l=tabs.length;
@@ -259,6 +269,8 @@ function actuallyLoadAllTabs(navToTopMatch){
 			inc=1,i=0;
 		}
 
+		/* needed: a way to sort tabs on history order too, since search results are always sorted by tab order, alpha order, or url order ... see "tabsGotten means historyTabs" */
+		/* this will also need to be reset, or otherwise we need to also maintain a way to sort by default ordering */
 		if(alphaOrdering){
 			tabs.sort(function(a, b){
 			 var nameA=a.title.toLowerCase(), nameB=b.title.toLowerCase()
@@ -283,14 +295,16 @@ function actuallyLoadAllTabs(navToTopMatch){
 		//for( i=tabs.length-1; cdn(i,l); i+=inc ){
 		for( ; cdn(i,l); i+=inc ){
 			var tab=tabs[i]
-			if(tab && !tabsLoaded[tab.id]){
+			if(tab){
 				if(searchWord){
 					var searchHaystack = tab.title.toLowerCase()+' '+tab.url.toLowerCase();
 					for(s=0,sl=searchWord.length;s<sl; s++){
 						if(searchHaystack.indexOf(searchWord[s]) < 0) break;
 					}
-					if(s==sl) tabResults.push(tab),maekTab(tab);
-				}else tabResults.push(tab),maekTab(tab);
+					if(s==sl) maekTab(tab);
+				}else if(!navToTopMatch || selectedMatchIndex > 0){
+					maekTab(tab); // calling this function while navigating top match can cause issues where popup does not close, when selectedMatchIndex > 0 typically results are already created and in that case maekTab() does nothing to cause this undesired behavior
+				}
 			}curTab++;//stop
 		}
 		
@@ -298,25 +312,30 @@ function actuallyLoadAllTabs(navToTopMatch){
 		showRemainingTabsButton(true);
 		
 		if(alphaOrdering||urlOrdering){//get sort back
-			getCurrentTabs();
+			getCurrentTabs(); // this resets the sort, since we applied a strange sort above, we lost the default ordering of tabs, probably not needed if desired sort is always applied
 		}
 
-		if( selectedMatchIndex < 0 ) selectedMatchIndex = 0;
 		if( selectedMatchIndex >= tabResults.length ) selectedMatchIndex = tabResults.length-1;
+		if( selectedMatchIndex < 0 ) selectedMatchIndex = 0;
 
-		if( tabResults.length ){ //show thumbnail for first result
-			mouseOverTab({}, document.getElementById('tabs').childNodes[selectedMatchIndex].getElementsByTagName('a')[0])
-		}
-
-		if( navToTopMatch ){
-			switchToTab({},{name:tabResults[selectedMatchIndex].id});
+		if( tabResults.length ){
+			if( navToTopMatch ){
+				switchToTab({},{name:tabResults[selectedMatchIndex].id});
+			}else{
+				//show thumbnail for first result, also indicate tab index
+				mouseOverTab({}, document.getElementById('tabs').childNodes[selectedMatchIndex].getElementsByTagName('a')[0]);
+			}
 		}
 	//});
 }
-var allInWindow=[];
+var allInWindow=[],allTabsByTabId=[];
 function getCurrentTabs(){
-	chrome.tabs.getAllInWindow(null, function(t) {
-		allInWindow=t;
+	chrome.tabs.getAllInWindow(null, function(tabs) {
+		allInWindow=tabs;
+		allTabsByTabId=[];
+		for( var i=tabs.length-1; i>-1; i-- ){
+			allTabsByTabId[tabs[i].id]=tabs[i];
+		}// duplicated below
 	});
 }
 function loadRest(doReset){
@@ -324,18 +343,21 @@ function loadRest(doReset){
 	if(doReset)clearAllReset();
 	chrome.tabs.getAllInWindow(null, function(tabs){
 		allInWindow=tabs;
-		var allTabsnow=[];
+		allTabsByTabId=[];
 		for( var i=tabs.length-1; i>-1; i-- ){
-			allTabsnow[tabs[i].id]=tabs[i];
-		}
+			allTabsByTabId[tabs[i].id]=tabs[i];
+		}// duplicated above
 		while(curTab<tabsGotten.length){
-			var tab=allTabsnow[tabsGotten[curTab]];
+			var tab=allTabsByTabId[tabsGotten[curTab]];
 			//console.log('--');
 			if(tab){
 				maekTab(tab);
 			}curTab++;//go
 			//if(curTab > tabsGotten.length-2)window.setTimeout(addRemainingTabsLink,300);
 			//console.log(curTab, tabsGotten.length-2)
+		}
+		if( tabsGotten.length ){
+			mouseOverTab({}, document.getElementById('tabs').childNodes[selectedMatchIndex].getElementsByTagName('a')[0]);
 		}
 		if(doReset)showRemainingTabsButton();
 	});
@@ -369,11 +391,15 @@ function cl(){
 function selectSelf(ev){
 	getEventTarget(ev).select();
 }
-function wordSearchTabTitles(ev){
+function processArrowInput(ev){
 	console.log(ev.keyCode);
 	var kc = ev.keyCode;
 	if( kc == 13 ){//enter
+		cancelEvent(ev);
 		return actuallyLoadAllTabs(true);
+	}else if( kc == 17 ){//left control
+		cancelEvent(ev);
+		return setLastSearch();
 	}else if(kc == 38){//up
 		selectedMatchIndex--;
 		cancelEvent(ev);
@@ -384,11 +410,27 @@ function wordSearchTabTitles(ev){
 	setTimeout(actuallyLoadAllTabs,10);
 }
 
+function setLastSearch(){
+	_ge('title-search').value=localStorage["lastSearch"];
+	_ge('title-search').select();
+	actuallyLoadAllTabs();
+}
+
 function showRemainingTabsButton(is_on){
 	if(_ge('LOAD_MORE'))is_on=true;
 	if(_ge('LOAD_MORE'))_ge('LOAD_MORE').parentNode.removeChild(_ge('LOAD_MORE'));
 	if(_ge('LOAD_HIST'))_ge('LOAD_HIST').parentNode.removeChild(_ge('LOAD_HIST'));
-	
+	if(_ge('LAST_SEARCH'))_ge('LAST_SEARCH').parentNode.removeChild(_ge('LAST_SEARCH'));
+
+	if( localStorage["lastSearch"] ){
+		var n=Cr.elm('div',{id:'LAST_SEARCH',class:'thinrow',events:[['click', setLastSearch]]},[
+			Cr.elm('a',{name:'LAST_SEARCH',title:"Show results for the last search term '"+localStorage["lastSearch"]+"' [ctrl]..."},[
+				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show "'+localStorage["lastSearch"]+'"...')])
+			])
+		]);
+		Cr.insertNode(n,_ge('controls'),_ge('controls').firstChild);
+	}
+
 	if(is_on){
 		var n=Cr.elm('div',{id:'LOAD_HIST',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 			Cr.elm('a',{name:'LOAD_HIST',title:"Shows historic tabs in order of their last viewing.  Tabs you were just in will be listed at the top."},[
@@ -404,13 +446,14 @@ function showRemainingTabsButton(is_on){
 		]);
 		Cr.insertNode(n,_ge('controls'),_ge('controls').firstChild);
 	}
+
 }
 
 function addRemainingTabsLink(){
 	showRemainingTabsButton();
 
 	var sf=Cr.elm('div',{id:'LOAD_SEARCH',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
-		Cr.elm('input',{id:'title-search',type:'text',value:searchTitlesDefault,events:[['mouseover',selectSelf],['keydown',wordSearchTabTitles]]})
+		Cr.elm('input',{id:'title-search',type:'text',value:searchTitlesDefault,events:[['mouseover',selectSelf],['keydown',processArrowInput]]})
 	],_ge('controls'));
 	sf.firstChild.select();
 
@@ -432,6 +475,8 @@ function addRemainingTabsLink(){
 		])
 	],_ge('controls'));
 }
+
+document.addEventListener('keydown',processArrowInput);
 
 document.addEventListener('DOMContentLoaded', function () {
 	cl();
