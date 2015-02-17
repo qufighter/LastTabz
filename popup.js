@@ -373,17 +373,14 @@ function createf1(){
 function cl(){
 	addRemainingTabsLink();
 	chrome.runtime.sendMessage({greeting: "gettabs"}, function(response) {
-//document.body.innerHTML+=response.farewell;
-		if(response.farewell==undefined){addRemainingTabsLink();return;};
 		createf1();
-		var tabs = response.farewell;//ß.split(',');
-		tabsGotten=[],curTab=0,hasAdd=false;//,loadedTabs=0;
+		var tabs = response.farewell || [];
+		tabsGotten=[],curTab=0,hasAdd=false;
 		for( i=tabs.length-(showFirstItem?1:2); i >-1; i-- ){
 			if(tabs[i]-0 > 0 ){
 				tabsGotten.push(tabs[i]-0);
 			}
 		}
-		//if(tabsGotten.length>0)
 		loadRest();
 	});
 }
