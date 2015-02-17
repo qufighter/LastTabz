@@ -426,7 +426,7 @@ function showRemainingTabsButton(is_on){
 	if(is_on){
 		var n=Cr.elm('div',{id:'LOAD_HIST',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 			Cr.elm('a',{name:'LOAD_HIST',title:"Shows historic tabs in order of their last viewing.  Tabs you were just in will be listed at the top."},[
-				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show History Order...')])
+				Cr.elm('span',{class:'thinspan'},[Cr.txt('Show Recent Tabs...')])
 			])
 		]);
 		Cr.insertNode(n,_ge('controls'),_ge('controls').firstChild);
