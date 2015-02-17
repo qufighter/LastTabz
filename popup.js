@@ -362,18 +362,13 @@ function loadRest(doReset){
 		if(doReset)showRemainingTabsButton();
 	});
 }
-function createf1(){
-	var dcl='',moe='';
-	if(doThumbs){
-		document.body.style.marginLeft=150;
-		moe='onmouseover="pr(this)" ';
-		dcl='style="left:150px;"';
-	}
-}
+
 function cl(){
 	addRemainingTabsLink();
 	chrome.runtime.sendMessage({greeting: "gettabs"}, function(response) {
-		createf1();
+		if(doThumbs){
+			document.body.style.marginLeft=150;
+		}
 		var tabs = response.farewell || [];
 		tabsGotten=[],curTab=0,hasAdd=false;
 		for( i=tabs.length-(showFirstItem?1:2); i >-1; i-- ){
