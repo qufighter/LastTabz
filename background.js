@@ -122,6 +122,9 @@ chrome.tabs.onActivated.addListener(function(aInfo){
 chrome.windows.onFocusChanged.addListener(function(windowId){
 	if(windowId!= chrome.windows.WINDOW_ID_NONE ){
 		currentWindow = windowId;
+
+		// seems like the "current window" may not have history - meaning it is a new window in this case
+		// or maybe the current windows history entries had been moved to another window, or closed ???? 
 	}
 });
 
@@ -269,7 +272,8 @@ function reallyCaptureImage(winId,tabId){
 			var offset = 0;
 			var variation = 0;
 			var dat, dat2, dat3, avg=[];
-			var ypos=cvs.height*0.25, ypos2=cvs.height*0.5, ypos3=cvs.height*0.75, yheight=cvs.height*0.25;
+			var mean, min, max, median, range, halfRange, maxDist, minDist;
+			var ypos=cvs.height*0.0, ypos2=cvs.height*0.33, ypos3=cvs.height*0.66, yheight=cvs.height*0.33;
 			while( variation < 15 && offset < img.naturalWidth/4){
 				tctx.drawImage(cvs, 5,ypos, 1,yheight, 0,0, 1,1)
 				dat = tctx.getImageData(0,0, 1,1).data;
@@ -278,8 +282,25 @@ function reallyCaptureImage(winId,tabId){
 				tctx.drawImage(cvs, 5,ypos3, 1,yheight, 0,0, 1,1)
 				dat3 = tctx.getImageData(0,0, 1,1).data;
 				avg = [(dat[0]+dat2[0]+dat3[0])*0.333, (dat[1]+dat2[1]+dat3[1])*0.333, (dat[2]+dat2[2]+dat3[2])*0.333]
-				variation = Math.abs(dat[0]-avg[0]) + Math.abs(dat[1]-avg[1]) + Math.abs(dat[2]-avg[2])
-				//console.log(variation);
+				mean = (avg[0] + avg[1] + avg[2])*0.333;
+
+				avg.sort();
+				min = avg[0];//Math.min(avg[0], avg[1], avg[2]);
+				max = avg[2];//Math.max(avg[0], avg[1], avg[2]);
+				median = avg[1];
+				//(avg[0]!=min && avg[0]!=max)?median=avg[0]:0;
+				//(avg[1]!=min && avg[1]!=max)?median=avg[1]:0;
+				//(avg[2]!=min && avg[2]!=max)?median=avg[2]:0;
+
+				maxDist = max - median,
+				minDist = median - min;
+				maxDist = Math.max(maxDist, minDist);
+				range = (max - min);
+				halfRange = range * 0.5;
+
+				//variation = Math.abs(dat[0]-avg[0]) + Math.abs(dat[1]-avg[1]) + Math.abs(dat[2]-avg[2])
+				variation = range - (maxDist - halfRange);
+				//console.log('variation', variation, offset, avg);
 				offset += 5;
 				ctx.drawImage(img, offset,0, img.naturalWidth,img.naturalHeight, 0,0, dwidth,dheight);
 			}
