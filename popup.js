@@ -1,4 +1,4 @@
-var pressedTabs=[],ecurTab=0,closeMode=false;
+var pressedTabs={},ecurTab=0,selectMode=false;
 var searchTitlesDefault='Search Title & Url';
 function getEventTarget(ev){
 	ev = ev || event;
@@ -46,17 +46,32 @@ function cancelEvent(e){
 function _ge(l){
 	return document.getElementById(l);
 }
-function addBorder(who){
-	who.previousSibling.style.border='1px solid red';
-	who.style.border="1px solid red";
+function nearestRow(who){
+	while( who && !who.classList.contains("row") && !who.classList.contains("thinrow") ){
+		who = who.parentNode;
+		if( !who || !who.classList ) who = null;
+	}
+	return who;
+}
+function childA(who){
+	if( who && who.nodeName != 'A' ){
+		who = who.getElementsByTagName('a')[0];
+	}
+	return who;
+}
+function rowA(who){
+	return childA(nearestRow(who));
+}
+function addBorder(who, ev){
+	var color = ev.button==1 ? 'red' : 'blue';
+	who.style.border='1px solid '+color;
 }
 function remBorder(who){
-	who.previousSibling.style.border='none';
+	who.style.border='none';
 	who.style.border='';
 }
-function hasBorder(who){if(who.style.border=="1px solid red")return true;return false;}
-function queueClose(who){pressedTabs[who.name]=(who);}
-function unqueueClose(who){pressedTabs[who.name]=false;}
+function addToSelection(who){pressedTabs[who.name]=(who);}
+function removeFromSelection(who){pressedTabs[who.name]=false;}
 function clearPressed(){
 	for(var t in pressedTabs){
 		if(pressedTabs[t]) remBorder(pressedTabs[t]);
@@ -64,36 +79,39 @@ function clearPressed(){
 	pressedTabs=[];
 }
 function pressTab(ev,who,isfirst){
-	who=getEventTargetA(ev);
-	if(who.parentNode.className!='thinrow' && ev.button==1){
+	who=rowA(ev.target);
+	if(who.parentNode.className!='thinrow'){
 		clearPressed()
-		closeMode=true;
-		addBorder(who);
-		queueClose(who);
+		selectMode=true;
+		addBorder(who, ev);
+		addToSelection(who);
 		ecurTab=who;
 	}
 }
 function relesTab(ev){
-	who=getEventTargetA(ev);
+	who=rowA(ev.target);
 	if(ev.button==1){
 		remTabs(who);
+	}else{
+		selectTabs(ev, who);
 	}
+	selectMode=false;
 }
 var lastOverTab = {className:''}
 function mouseOverTab(ev,who,isfirst){
-	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
-	if(who.parentNode.className!='thinrow' && closeMode && ev.button==1 && ecurTab!=who){
-		if(hasBorder(who)){
+	if( typeof(who) == 'undefined') who=rowA(ev.target);
+	if( selectMode && who.parentNode.className!='thinrow' && ecurTab!=who){
+		if(pressedTabs[who.name]){
 			remBorder(who);
-			unqueueClose(who);
+			removeFromSelection(who);
 		}else{
-			addBorder(who);
-			queueClose(who);
+			addBorder(who, ev);
+			addToSelection(who);
 		}
 		ecurTab=who;
 	}
 
-	if( who.parentNode.className=='row' ){
+	if(who.parentNode.className=='row' ){
 		lastOverTab.className=lastOverTab.className.replace(' reticule','');
 		who.className=who.className.replace(' reticule','') + ' reticule';
 		lastOverTab=who;
@@ -110,7 +128,7 @@ function mouseOverTab(ev,who,isfirst){
 //			}
 }
 function mouseOutTab(ev,who){
-	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
+	if( typeof(who) == 'undefined') who=rowA(ev.target);
 
 	if( who.parentNode.className=='row' ){
 		lastOverTab.className=lastOverTab.className.replace(' reticule','');
@@ -121,25 +139,63 @@ function mouseOutTab(ev,who){
 //  		}
 }
 
+function defaultMouseUp(ev){
+	selectMode=false;
+	who=rowA(ev.target);
+	if( !who ){
+		clearPressed();
+	}
+}
+
 function clearSearch(){
 	_ge('title-search').value=searchTitlesDefault;
 }
 
-function switchToTab(ev,who){
-	if( typeof(who) == 'undefined') who=getEventTargetA(ev);
+function switchToTab(ev,who,cbf){
+	if( typeof(who) == 'undefined') who=rowA(ev.target);
+	if( !cbf ) cbf = function(){/*changed tab*/window.close();}
 	if(ev.button==1){remTab(who);return;};
 	if(who.name=='LOAD_HIST'){clearSearch();loadRest(true);return;};
 	if(who.name=='LOAD_MORE'){clearSearch();loadAllTabs();return;};
 	if(who.name=='LOAD_DNS'){clearSearch();loadAllTabs(false,false,true);return;};
 	if(who.name=='LOAD_ALPHA'){clearSearch();loadAllTabs(false,true);return;};
 	if(who.name=='LOAD_DEFAULT'){clearSearch();loadAllTabs(true);return;};
-	chrome.tabs.update(who.name-0,{active:true},function(){/*changed tab*/window.close();})
+	chrome.tabs.update(who.name-0,{active:true},cbf)
 }
-function remTabs(who){if(hasBorder(who)){for(var t in pressedTabs){if(pressedTabs[t]) remTab(pressedTabs[t]);}pressedTabs=[];}else{clearPressed();remTab(who);}}
+
+function forPressedTabs(functionToRun){
+	for(var t in pressedTabs){
+		if(pressedTabs[t]) functionToRun(pressedTabs[t]);
+	}
+}
+
+function selectTabs(ev, who){
+	// first may need to clear current selection -> just select result tab first....
+	switchToTab(ev, who, function(){
+		if(pressedTabs[who.name]){
+			forPressedTabs(selectTab);
+			pressedTabs=[];
+		}else{
+			clearPressed();
+		}
+	});
+}
+function remTabs(who){
+	if(pressedTabs[who.name]){
+		forPressedTabs(remTab);
+		pressedTabs=[];
+	}else{
+		clearPressed();
+		remTab(who);
+	}
+}
 function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){getCurrentTabs()})}
+function selectTab(who){chrome.tabs.update(who.name-0,{highlighted:true},function(){getCurrentTabs()})}
+
+
+
 function closeX(ev){
 	who=getEventTarget(ev);
-	console.log(who);
 	remTab(who);
 	cancelEvent(ev);
 }
@@ -342,6 +398,7 @@ function loadRest(doReset){
 	if(typeof(doReset)=='undefined')doReset=false;
 	if(doReset)clearAllReset();
 	chrome.tabs.getAllInWindow(null, function(tabs){
+		//console.log('ehllo',tabs);
 		allInWindow=tabs;
 		allTabsByTabId=[];
 		for( var i=tabs.length-1; i>-1; i-- ){
@@ -378,13 +435,14 @@ function cl(){
 		}
 		loadRest();
 	});
+	document.body.addEventListener('mouseup', defaultMouseUp);
 }
 
 function selectSelf(ev){
 	getEventTarget(ev).select();
 }
 function processArrowInput(ev){
-	console.log(ev.keyCode);
+	//console.log(ev.keyCode);
 	var kc = ev.keyCode;
 	if( kc == 13 ){//enter
 		cancelEvent(ev);
