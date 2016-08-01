@@ -1,5 +1,8 @@
 var pressedTabs={},ecurTab=0,selectMode=false;
 var searchTitlesDefault='Search Title & Url';
+var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
+var fixedSizePopup = isFirefox;
+
 function getEventTarget(ev){
 	ev = ev || event;
 	var targ=(typeof(ev.target)!='undefined') ? ev.target : ev.srcElement;
@@ -386,7 +389,7 @@ function actuallyLoadAllTabs(navToTopMatch){
 }
 var allInWindow=[],allTabsByTabId=[];
 function getCurrentTabs(){
-	chrome.tabs.getAllInWindow(null, function(tabs) {
+	chrome.tabs.query({currentWindow:true}, function(tabs) {
 		allInWindow=tabs;
 		allTabsByTabId=[];
 		for( var i=tabs.length-1; i>-1; i-- ){
@@ -397,7 +400,8 @@ function getCurrentTabs(){
 function loadRest(doReset){
 	if(typeof(doReset)=='undefined')doReset=false;
 	if(doReset)clearAllReset();
-	chrome.tabs.getAllInWindow(null, function(tabs){
+
+	chrome.tabs.query({currentWindow:true}, function(tabs) {
 		//console.log('ehllo',tabs);
 		allInWindow=tabs;
 		allTabsByTabId=[];
@@ -530,4 +534,6 @@ document.addEventListener('keydown',processArrowInput);
 
 document.addEventListener('DOMContentLoaded', function () {
 	cl();
+
+	if( fixedSizePopup ) document.body.className += ' fixed-popup-size';
 });
