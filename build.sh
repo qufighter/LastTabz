@@ -15,16 +15,17 @@ fi
 
 rm -fr build
 mkdir build
-mkdir build/1.0
 
 echo "copying files"
 
-cp -r * build/1.0  2> /dev/null
+cp -r * build  2> /dev/null
 
 echo "cleaning up"
 #remove any build folder in build folder and build.sh
-rm -fr build/1.0/build*
-rm -fr build/1.0/$PROG.*.zip
+rm -fr build/build*
+rm -fr build/$PROG.*.zip
+rm -fr build/.DS_Store
+rm -fr build/img/.DS_Store
 
 echo "determining version number"
 vers=`cat manifest.json | awk -f build.awk`
