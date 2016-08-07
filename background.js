@@ -9,6 +9,7 @@ var thumbwidth=100;
 var thHeiRatio=0.75;
 var currentWindow = 1;//to track which set of tabs to return to the popup.html
 var tabsWindows=[];
+
 function fromPrefs(){
 	if(localStorage["maxhistory"]-0 > 0 ) maxHistory = new Number(localStorage["maxhistory"]) + 1;
 	dothumbs = ((localStorage["dothumbs"]=='true')?true:false);
@@ -234,6 +235,8 @@ function(request, sender, sendResponse){
 		}else if(request.greeting == "lastab"){
 			goToLastTab();
 			sendResponse({});
+		}else if(request.greeting == "highlightTabs"){
+			chrome.tabs.highlight({tabs:JSON.parse(request.tabs), windowId:sender.windowId})
 		}else if(request.greeting == "gettabimg"){
 			if(tabImgs[request.tabId]){
 				sendResponse({scr: tabImgs[request.tabId]});

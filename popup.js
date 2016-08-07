@@ -2,6 +2,7 @@ var pressedTabs={},ecurTab=0,selectMode=false;
 var searchTitlesDefault='Search Title & Url';
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 var fixedSizePopup = isFirefox;
+var bkg = chrome.extension.getBackgroundPage();
 
 function getEventTarget(ev){
 	ev = ev || event;
@@ -154,6 +155,25 @@ function clearSearch(){
 	_ge('title-search').value=searchTitlesDefault;
 }
 
+function goToOrOpenOptions(completedCallback){
+  var optionsUrl = chrome.extension.getURL("options.html");
+  chrome.tabs.query({
+    url: optionsUrl,
+    currentWindow: true
+  }, function(tabs){
+    if( tabs.length > 0 ){
+      chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
+    }else{
+      chrome.tabs.create({
+        url: optionsUrl,
+        active: true
+      }, function(t){
+        chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
+      });
+    }
+  });
+}
+
 function switchToTab(ev,who,cbf){
 	if( typeof(who) == 'undefined') who=rowA(ev.target);
 	if( !cbf ) cbf = function(){/*changed tab*/window.close();}
@@ -163,7 +183,19 @@ function switchToTab(ev,who,cbf){
 	if(who.name=='LOAD_DNS'){clearSearch();loadAllTabs(false,false,true);return;};
 	if(who.name=='LOAD_ALPHA'){clearSearch();loadAllTabs(false,true);return;};
 	if(who.name=='LOAD_DEFAULT'){clearSearch();loadAllTabs(true);return;};
+	if(who.name=='LOAD_OPTIONS'){goToOrOpenOptions(function(){});return;};
 	chrome.tabs.update(who.name-0,{active:true},cbf)
+}
+
+var collectedTabIndicies = [];
+function resetCollectedTabIds(){
+	collectedTabIndicies = [];
+}
+
+function collectTabIds(who){
+	if( allTabsByTabId[who.name-0] ){
+		collectedTabIndicies.push( allTabsByTabId[who.name-0].index );
+	}
 }
 
 function forPressedTabs(functionToRun){
@@ -173,15 +205,25 @@ function forPressedTabs(functionToRun){
 }
 
 function selectTabs(ev, who){
-	// first may need to clear current selection -> just select result tab first....
+
+	if(pressedTabs[who.name]){
+		resetCollectedTabIds();
+		forPressedTabs(collectTabIds);
+	}
+
 	switchToTab(ev, who, function(){
+		// depending on chrome version, there is a very good chance the popup is closed before this callback will fire
 		if(pressedTabs[who.name]){
-			forPressedTabs(selectTab);
-			pressedTabs=[];
-		}else{
-			clearPressed();
+			// forPressedTabs(selectTab); // this should have occured with highlightTabs message
 		}
+		clearPressed();
 	});
+
+	if( collectedTabIndicies.length > 1 ){
+		// we like this to fire after active changes since that would clear highlight
+		// in future this will probably update the active from BG page, then also update highlight rather than rely on switchToTab to fire first
+		chrome.runtime.sendMessage({greeting: "highlightTabs", tabs: JSON.stringify(collectedTabIndicies) }, function(response) {});
+	}
 }
 function remTabs(who){
 	if(pressedTabs[who.name]){
@@ -193,7 +235,7 @@ function remTabs(who){
 	}
 }
 function remTab(who){who.parentNode.parentNode.removeChild(who.parentNode);chrome.tabs.remove([who.name-0],function(){getCurrentTabs()})}
-function selectTab(who){chrome.tabs.update(who.name-0,{highlighted:true},function(){getCurrentTabs()})}
+function selectTab(who){chrome.tabs.update(who.name-0,{highlighted:true},function(){})}
 
 
 
@@ -294,9 +336,6 @@ function clearAllReset(){
 	Cr.empty(_ge('tabs'));
 	curTab=0;
 }
- //think about it fool cuz its a joke that tabs could change while this is open?? or no....?? search getAllInWindow 2x= no 
-//if(who.name=='LOAD_ALPHA'){who.childNodes[1].innerText='';loadAlphabetical();return;};if(who.name=='LOAD_DEFAULT'){who.childNodes[1].innerText='';loadAllTabs(true);return;};
-
 
 function loadAllTabs(_defaultOrdering,_alphaOrdering,_urlOrdering){
 	if(typeof(_defaultOrdering)=='undefined')_defaultOrdering=false;
@@ -526,6 +565,12 @@ function addRemainingTabsLink(){
 	Cr.elm('div',{id:'LOAD_DEFAULT',class:'thinrow',events:[['mousedown', pressTab],['mouseup', relesTab],['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
 		Cr.elm('a',{name:'LOAD_DEFAULT',title:"Show tabs in their default left to right order"},[
 			Cr.elm('span',{class:'thinspan'},[Cr.txt('Sort by Tab Order...')])
+		])
+	],_ge('controls'));
+
+	Cr.elm('div',{id:'LOAD_OPTIONS',class:'thinrow',events:[['mouseover', mouseOverTab],['mouseout', mouseOutTab],['click', switchToTab]]},[
+		Cr.elm('a',{name:'LOAD_OPTIONS',title:"Preferences"},[
+			Cr.elm('span',{class:'thinspan'},[Cr.txt('Options...')])
 		])
 	],_ge('controls'));
 }
