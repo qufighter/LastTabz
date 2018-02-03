@@ -115,7 +115,7 @@ function mouseOverTab(ev,who,isfirst){
 		ecurTab=who;
 	}
 
-	if(who.parentNode.className=='row' ){
+	if(who.parentNode && who.parentNode.className=='row' ){
 		lastOverTab.className=lastOverTab.className.replace(' reticule','');
 		who.className=who.className.replace(' reticule','') + ' reticule';
 		lastOverTab=who;
@@ -134,7 +134,7 @@ function mouseOverTab(ev,who,isfirst){
 function mouseOutTab(ev,who){
 	if( typeof(who) == 'undefined') who=rowA(ev.target);
 
-	if( who.parentNode.className=='row' ){
+	if( who.parentNode && who.parentNode.className=='row' ){
 		lastOverTab.className=lastOverTab.className.replace(' reticule','');
 	}
 //  		if(ev.button==1){
@@ -304,7 +304,7 @@ if(doThumbs){
 }
 
 function maekTab(tab,b){
-	if( tabsLoaded[tab.id] ){console.log('tab alredy loaded', tab, b);return;}
+	if( tabsLoaded[tab.id] ){/*console.log('tab alredy loaded', tab, b);*/return;}
 	if(curTab>=15){
 		document.body.style.overflowY='auto';
 		document.body.style.marginRight='16px';
