@@ -255,7 +255,6 @@ if(justback){
 	chrome.runtime.sendMessage({greeting: "lastab"}, function(response) {})
 	window.close();
 }
-var offstringcut = 21;//truncate titles will be ocfigurable as wol wildth
 function pr(who){};
 if(doThumbs){
 	function pr(who){
@@ -323,7 +322,7 @@ function maekTab(tab,b){
 						},[
 							Cr.elm('img',{src:tab.favIconUrl,class:'favi',border:0}),
 							Cr.elm('span',{},[
-								Cr.txt(tab.title.replace('http://','').replace('www.','').substr(0,offstringcut))
+								Cr.txt(tab.title.replace('http://','').replace('www.',''))
 							])
 						]
 		)
