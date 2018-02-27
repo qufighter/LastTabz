@@ -122,7 +122,10 @@ function mouseOverTab(ev,who,isfirst){
 		lastOverTab=who;
 	}
 
-	who.scrollIntoViewIfNeeded();
+	if( who.scrollIntoViewIfNeeded )
+		who.scrollIntoViewIfNeeded();
+	else
+		who.scrollIntoView();
 	pr(who)
 //  		if(ev.button==1){
 //  			if(isfirst || pressedTab==who){
@@ -163,13 +166,15 @@ function goToOrOpenOptions(completedCallback){
     currentWindow: true
   }, function(tabs){
     if( tabs.length > 0 ){
-      chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
+      chrome.tabs.update(tabs[0].id,{active:true}, completedCallback)
+      //chrome.tabs.highlight({tabs:[tabs[0].index], windowId:tabs[0].windowId}, completedCallback);
     }else{
       chrome.tabs.create({
         url: optionsUrl,
         active: true
       }, function(t){
-        chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
+        chrome.tabs.update(t.id,{active:true}, completedCallback)
+        // chrome.tabs.highlight({tabs:[t.index]}, completedCallback)
       });
     }
   });

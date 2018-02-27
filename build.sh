@@ -26,6 +26,7 @@ rm -fr build/build*
 rm -fr build/$PROG.*.zip
 rm -fr build/.DS_Store
 rm -fr build/img/.DS_Store
+rm -fr build/img_delete
 
 echo "determining version number"
 vers=`cat manifest.json | awk -f build.awk`

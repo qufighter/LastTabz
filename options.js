@@ -7,6 +7,9 @@ pOptions["showCurrentTab"]={def:false,ind:0,name:'Show Current Tab at the top of
 pOptions["onewin"]={def:false,ind:0,name:'One History Menu for All Windows (warning - does not focus other windows yet)'};
 pOptions["justback"]={def:false,ind:0,name:'Clicking the menu simply takes you back one tab, set max history to 3 if using this feature'};
 
+var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
+
+
 // Saves options to localStorage.
 function save_options() {
 //  var select = document.getElementById("color");
@@ -107,4 +110,8 @@ document.addEventListener('DOMContentLoaded', function () {
 	init()
 	document.getElementById('bsave').addEventListener('click', save_options);
 	document.getElementById('defa').addEventListener('click', reset_options);
+
+	if( isFirefox ){
+		document.getElementById('ext_home').href="https://addons.mozilla.org/en-US/firefox/addon/last-tabs/"
+	}
 });

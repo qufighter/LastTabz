@@ -11,7 +11,7 @@ var currentWindow = 1;//to track which set of tabs to return to the popup.html
 var tabsWindows=[];
 
 function fromPrefs(){
-	if(localStorage["maxhistory"]-0 > 0 ) maxHistory = new Number(localStorage["maxhistory"]) + 1;
+	if(localStorage["maxhistory"]-0 > 0 ) maxHistory = (localStorage["maxhistory"] - 0) + 1;
 	dothumbs = ((localStorage["dothumbs"]=='true')?true:false);
 	if(dothumbs==false)tabImgs=[];
 	hqthumbs = ((localStorage["hqthumbs"]=='true')?true:false);
@@ -63,35 +63,35 @@ var iconimg=new Image();
 iconimg.src="img/icon19.png";
 
 function updateIcon(windowId){
-	return;
-	if(!dothumbs)return;
-	var curIdx = selwIdx[windowId];
-	if( !selWindows[windowId][curIdx-1] || !tabImgs[selWindows[windowId][curIdx-1]] ){
-		//console.log(windowId+'nol'+curIdx+' '+selWindows[windowId][curIdx+1]);
-		return;
-	}
-	chrome.tabs.get(selWindows[windowId][curIdx-1], function(tab){
-		var icvs = document.createElement('canvas');//icon canvas
-		var sx,sy;
-		var totalWidth = 19;
-		icvs.width=totalWidth
-		icvs.height=totalWidth
-		var ictx = icvs.getContext("2d");
-		favimg=new Image();
-		favimg.onload = function(){
-			ictx.drawImage(iconimg,0,0);
-			//ictx.scale(0.9,0.9);
-			ictx.drawImage(favimg,3,2);
-			chrome.browserAction.setIcon({imageData:ictx.getImageData(0, 0, 19, 19)});//update icon (to be configurable)
-			icvs=null;
-		}
-		favimg.src=tabImgs[tab.id];//tab.favIconUrl;
-		});
+	//return;
+	// if(!dothumbs)return;
+	// var curIdx = selwIdx[windowId];
+	// if( !selWindows[windowId][curIdx-1] || !tabImgs[selWindows[windowId][curIdx-1]] ){
+	// 	//console.log(windowId+'nol'+curIdx+' '+selWindows[windowId][curIdx+1]);
+	// 	return;
+	// }
+	// chrome.tabs.get(selWindows[windowId][curIdx-1], function(tab){
+	// 	var icvs = document.createElement('canvas');//icon canvas
+	// 	var sx,sy;
+	// 	var totalWidth = 19;
+	// 	icvs.width=totalWidth
+	// 	icvs.height=totalWidth
+	// 	var ictx = icvs.getContext("2d");
+	// 	favimg=new Image();
+	// 	favimg.onload = function(){
+	// 		ictx.drawImage(iconimg,0,0);
+	// 		//ictx.scale(0.9,0.9);
+	// 		ictx.drawImage(favimg,3,2);
+	// 		chrome.browserAction.setIcon({imageData:ictx.getImageData(0, 0, 19, 19)});//update icon (to be configurable)
+	// 		icvs=null;
+	// 	}
+	// 	favimg.src=tabImgs[tab.id];//tab.favIconUrl;
+	// 	});
 }
 function historyAdd(winId,tabId){
 	if( !selWindows[winId] ){
 		selWindows[winId] = new Array();
-		selwIdx[winId]=new Number(-1);
+		selwIdx[winId]=-1;
 	}
 	//if( selWindows[winId][selwIdx[winId]] == tabId ) return; //same as one on top already
 	
@@ -258,6 +258,8 @@ function captureImage(winId,tabId){
 		}
 	});
 }
+
+
 function reallyCaptureImage(winId,tabId){
 	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
 		pim.onload=function(){
