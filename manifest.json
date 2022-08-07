@@ -1,14 +1,14 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "description": "Provides a menu with your previous tabs in order of access - never loose track of you last tab again!",
   "name": "Last Tabs",
-  "browser_action" : {
+  "action" : {
     "default_icon" : "img/icon19.png",
     "default_title": "LASTabs",
     "default_popup": "popup.html"
   },
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "options_page": "options.html",
   "commands": {
@@ -40,6 +40,7 @@
     "48" : "img/icon48.png",
     "128": "img/icon128.png"
   },
-  "permissions": ["<all_urls>","tabs"],
+  "permissions": ["tabs", "storage"],
+  "host_permissions": ["<all_urls>"],
   "version": "0.0.4.10"
 }

@@ -160,7 +160,7 @@ function clearSearch(){
 }
 
 function goToOrOpenOptions(completedCallback){
-  var optionsUrl = chrome.extension.getURL("options.html");
+  var optionsUrl = chrome.runtime.getURL("options.html");
   chrome.tabs.query({
     url: optionsUrl,
     currentWindow: true

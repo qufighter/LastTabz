@@ -1,14 +1,53 @@
 var pOptions=[];
 pOptions["disablelasttab"]={def:false,ind:0,name:'Disable Jumping to your Last Tab when you close a tab'};
 pOptions["maxhistory"]={def:15,ind:0,name:'Max History per Window '};
-pOptions["dothumbs"]={def:false,ind:0,name:'Collect Thumbnails'};
-pOptions["hqthumbs"]={def:false,ind:1,name:'HQ Thumbnails (more ram) '};
+//pOptions["dothumbs"]={def:false,ind:0,name:'Collect Thumbnails'};
+//pOptions["hqthumbs"]={def:false,ind:1,name:'HQ Thumbnails (more ram) '};
 pOptions["showCurrentTab"]={def:false,ind:0,name:'Show Current Tab at the top of the history list'};
 pOptions["onewin"]={def:false,ind:0,name:'One History Menu for All Windows (warning - does not focus other windows yet)'};
 pOptions["justback"]={def:false,ind:0,name:'Clicking the menu simply takes you back one tab, set max history to 3 if using this feature'};
 
+var pAdvOptions = [];
+
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 
+
+
+function sendReloadPrefs(cb){
+    var cbf=cb;
+    if(typeof(cbf)!='function')cbf=function(){};
+    chrome.runtime.sendMessage({reloadprefs: true}, function(response) {
+        if(chrome.runtime.lastError)console.log('sendReloadPrefs error (if there are active views we tell them to reload the preferences which may have changed): '+chrome.runtime.lastError.message);
+        cbf()
+    });
+}
+
+function chromeStorageSaveALocalStor(tosave){
+    storage.set(tosave, function() {
+        if(chrome.runtime.lastError && chrome.runtime.lastError.message.indexOf('MAX_WRITE_OPERATIONS_PER_HOUR') > 0){
+            //console.log(chrome.runtime.lastError);
+        }
+    });
+}
+
+function saveSyncItemsToChromeSyncStorage(){
+    var tosave={};
+    for(var i in pSyncItems){
+        tosave[i]=localStorage[i];
+    }
+    chromeStorageSaveALocalStor(tosave);
+    sendReloadPrefs();
+}
+function saveToChromeSyncStorage(){
+    var tosave={};
+    for(var i in pOptions){
+        tosave[i]=localStorage[i];
+    }
+    for(var i in pAdvOptions){
+        tosave[i]=localStorage[i];
+    }
+    chromeStorageSaveALocalStor(tosave);
+}
 
 // Saves options to localStorage.
 function save_options() {
@@ -28,6 +67,9 @@ function save_options() {
 	//localStorage["showCurrentTab"] = document.getElementById("showCurrentTab").checked;
 	//localStorage["maxhistory"] = document.getElementById("maxhistory").value;
 	
+    
+    
+    
 	
   // Update status to let user know options were saved.
   var status = document.getElementById("status");
