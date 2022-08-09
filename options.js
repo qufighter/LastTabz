@@ -1,16 +1,18 @@
 var pOptions=[];
 pOptions["disablelasttab"]={def:false,ind:0,name:'Disable Jumping to your Last Tab when you close a tab'};
 pOptions["maxhistory"]={def:15,ind:0,name:'Max History per Window '};
-//pOptions["dothumbs"]={def:false,ind:0,name:'Collect Thumbnails'};
-//pOptions["hqthumbs"]={def:false,ind:1,name:'HQ Thumbnails (more ram) '};
+pOptions["dothumbs"]={def:false,ind:0,name:'Collect Thumbnails'};
+pOptions["hqthumbs"]={def:false,ind:1,name:'HQ Thumbnails (more ram) '};
 pOptions["showCurrentTab"]={def:false,ind:0,name:'Show Current Tab at the top of the history list'};
 pOptions["onewin"]={def:false,ind:0,name:'One History Menu for All Windows (warning - does not focus other windows yet)'};
 pOptions["justback"]={def:false,ind:0,name:'Clicking the menu simply takes you back one tab, set max history to 3 if using this feature'};
 
 var pAdvOptions = [];
+var pSyncItems = {};
 
 var isFirefox = window.navigator.userAgent.indexOf('Firefox') > -1;
 
+var storage = chrome.storage.sync || chrome.storage.local;
 
 
 function sendReloadPrefs(cb){
@@ -68,8 +70,8 @@ function save_options() {
 	//localStorage["maxhistory"] = document.getElementById("maxhistory").value;
 	
     
-    
-    
+    saveToChromeSyncStorage();
+    //saveSyncItemsToChromeSyncStorage();
 	
   // Update status to let user know options were saved.
   var status = document.getElementById("status");

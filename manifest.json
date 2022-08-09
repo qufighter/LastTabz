@@ -40,7 +40,7 @@
     "48" : "img/icon48.png",
     "128": "img/icon128.png"
   },
-  "permissions": ["tabs", "storage"],
+  "permissions": ["tabs", "activeTab", "storage", "scripting"],
   "host_permissions": ["<all_urls>"],
   "version": "0.0.4.10"
 }

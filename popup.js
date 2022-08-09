@@ -283,6 +283,9 @@ if(doThumbs){
 	function pre(who){
 		chrome.runtime.sendMessage({greeting: "gettabimg",tabId:(who.name-0)}, function(response) {
 			if(response.scr){
+                
+                console.log('we got response.scr ', response.scr);
+                
 				if(! _ge('pim')){
 					var p=document.createElement('img');
 					p.src=response.scr;p.id='pim';p.width=150;p.className='prvw'
