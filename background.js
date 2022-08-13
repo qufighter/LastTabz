@@ -1,7 +1,7 @@
 var maxHistory = 15;//PerWindow
 var dothumbs = false;
-var selWindows=[];
-var selwIdx=[];
+var selWindows={};
+var selwIdx={};
 var tabImgs=[];
 var thscale=0.09;
 var hqthumbs=false;
@@ -9,10 +9,21 @@ var onewin=false;
 var justback=false;
 var thumbwidth=100;
 var thHeiRatio=0.75;
-var currentWindow = 1;//to track which set of tabs to return to the popup.html
+var currentWindow = 1;//to track which set of tabs to return to the popup.html (invalid at launch!!!)
 var tabsWindows=[];
 var storage = chrome.storage.sync || chrome.storage.local;
 var disablelasttab = false;
+
+function mv3_persist_session_storage(){
+    // since service worker may be killed any time, we call this often as we make any changes to our needed data objects....
+    console.log('store_to_session_memory_mv3_so_chatty_about_process_memory', selWindows, selwIdx);
+    
+    chrome.storage.session.set({
+        selWindows: JSON.stringify(selWindows)
+        ,selwIdx: JSON.stringify(selwIdx)
+        //,tabImgs: JSON.stringify(tabImgs) // too big to store here
+    }, function(){});
+}
 
 function loadPrefsFromStorage(cbf){
     storage.get(null, function(obj) {
@@ -126,7 +137,7 @@ function updateIcon(windowId){
 }
 function historyAdd(winId,tabId){
 	if( !selWindows[winId] ){
-		selWindows[winId] = new Array();
+		selWindows[winId] = [];
 		selwIdx[winId]=-1;
 	}
 	//if( selWindows[winId][selwIdx[winId]] == tabId ) return; //same as one on top already
@@ -143,6 +154,8 @@ function historyAdd(winId,tabId){
 	//console.log(selwIdx[winId]+' win:'+winId +' tab:'+tabId);
 	chrome.action.setTitle({title:(selWindows[winId].length-1)+' LASTabZ'})
 	updateIcon(winId);
+    
+    mv3_persist_session_storage();
 }
 function setCurrentWindow(tabId,selectInfo){
 	if(!onewin){
@@ -178,15 +191,13 @@ chrome.windows.onFocusChanged.addListener(function(windowId){
 
 function removedTab(closedTab) {
     
-    
-	disablelasttab = ((localStorage["disablelasttab"]=='true')?true:false);
-    
-    
 	//BUG - a popup window for some reason counts in the tab list for a window
 	var clwin=currentWindow;
 	if( !disablelasttab && closedTab == selWindows[currentWindow][selwIdx[currentWindow]] && selWindows[currentWindow].length > 1 ){
 		var finalTarget = selWindows[currentWindow][selwIdx[currentWindow]-1];
 		selWindows[currentWindow]=clearAll(closedTab,selWindows[currentWindow],currentWindow);
+        //        mv3_persist_session_storage(); // we'll do this below soon, so just wait?
+
 		setTimeout(function(){//unnecessary timeout?
 			chrome.windows.getCurrent(function(window){//could possibly use shortcut here - currentWindow should be up to date, however this delay is necessary since the window is switched after the tab is closed, we have to make sure that occurs first and registers in the history array?
 				var windowId = onewin?currentWindow:window.id;//currentWindow
@@ -203,12 +214,14 @@ function removedTab(closedTab) {
 							})
 						
 						//})
+                        mv3_persist_session_storage();
 					}
 				}
 			})
 		},3);
 	}else{
 		selWindows[currentWindow]=clearAll(closedTab,selWindows[currentWindow],currentWindow);
+        mv3_persist_session_storage();
 	}
 	if(tabImgs[closedTab]){
 		//tabImgs[closedTab]=false;
@@ -238,13 +251,15 @@ chrome.tabs.onDetached.addListener(removedTab);
 //		});
 
 function cleanupEmptyWindows(){
-	var nsw = new Array();
+    var nsw = {};
 	for(i in selWindows){
 		if( typeof(selWindows[i]) == 'object' && selWindows[i]!=null && selWindows[i].length > 0){
 			nsw[i]=selWindows[i];
 		}
 	}
 	selWindows=nsw;
+    
+    mv3_persist_session_storage();
 }
 
 function cleanupEmptyImages(){
@@ -301,6 +316,8 @@ function getWindowScrollY(){
 }
 
 function captureImage(winId,tabId){
+    return; /// disabled, see reason below
+    
 	// we only want to capture the header, check window.scrollY before screenshot!
     chrome.scripting.executeScript({
         target: {tabId: tabId},
@@ -328,6 +345,9 @@ function captureImage(winId,tabId){
 
 function reallyCaptureImage(winId,tabId){
 //chrome.tabs.sendMessage(tabId, {snapShot:true}, function(response) {});
+    
+    return; // these features are too problematic for mv3 (not snapping, too big to store to chrome.storage.session, etc)
+    // we culd cache toa  content script but thats sort of self defeating, this extgension isnt' suppose to need those.
     
     console.log('abotu to capture visible tab, it will work or fail right??')
     
@@ -397,7 +417,19 @@ function reallyCaptureImage(winId,tabId){
                     }
                     
                     //tabImgs[tabId]=URL.createObjectURL(cvs.convertToBlob({type: 'img/jpeg', quality: 1.0}));
-                    tabImgs[tabId]=cvs; //.convertToBlob({type: 'img/jpeg', quality: 1.0}); // we cache blobs now... don't ask why... because REASONS (such as I'm sure we can actually cache these right?? lol... wait I had running memory context... wait what am I??? a service worker!  Oh crap ran out of work, guess time to kill all memory anyway... bye bye...
+                    //tabImgs[tabId]=cvs;
+                    
+                    cvs.convertToBlob({type: 'img/jpeg', quality: 0.1}).then(function(cvsblob){
+                        const reader = new FileReader();
+                        reader.addEventListener('load', function(){
+                            tabImgs[tabId]=reader.result;
+                        });
+                        reader.readAsDataURL(cvsblob);
+                    });
+
+                    
+
+                    //.convertToBlob({type: 'img/jpeg', quality: 1.0}); // we cache blobs now... don't ask why... because REASONS (such as I'm sure we can actually cache these right?? lol... wait I had running memory context... wait what am I??? a service worker!  Oh crap ran out of work, guess time to kill all memory anyway... bye bye...
 
                     /*
                      
@@ -492,4 +524,28 @@ function reallyCaptureImage(winId,tabId){
 //var tiny = document.createElement('canvas');
 //tiny.width = 1;
 //tiny.height = 1;
-fromPrefs()
+
+
+
+// mv3 session storage... check it...
+chrome.storage.session.get(['selWindows','selwIdx'], function(stor){
+    
+    if( stor.selWindows ){
+        try{
+            selWindows = JSON.parse(stor.selWindows);
+        }catch(e){
+            selWindows = [];
+        }
+    }
+    
+    if( stor.selwIdx ){
+        try{
+            selwIdx = JSON.parse(stor.selwIdx);
+        }catch(e){
+            selwIdx = [];
+        }
+    }
+    
+    fromPrefs();
+});
+
