@@ -7,7 +7,7 @@ var onewin=false;
 var justback=false;
 var thumbwidth=100;
 var thHeiRatio=0.75;
-var currentWindow = 1;//to track which set of tabs to return to the popup.html
+var currentWindow = -1;//to track which set of tabs to return to the popup.html
 var tabsWindows=[];
 
 function fromPrefs(){
@@ -23,7 +23,7 @@ function fromPrefs(){
 		chrome.browserAction.setIcon({path:'img/icon19.png'});
 	}
 	if(onewin){
-		currentWindow=1;
+		currentWindow=-1;
 		//merge all history somehow....??
 	}else{
 		tabsWindows=[];
@@ -122,8 +122,9 @@ chrome.tabs.onActivated.addListener(function(aInfo){
 
 chrome.windows.onFocusChanged.addListener(function(windowId){
 	if(windowId!= chrome.windows.WINDOW_ID_NONE ){
-		currentWindow = windowId;
-
+        if(!onewin){
+            currentWindow= windowId;
+        }
 		// seems like the "current window" may not have history - meaning it is a new window in this case
 		// or maybe the current windows history entries had been moved to another window, or closed ???? 
 	}
@@ -261,7 +262,8 @@ function captureImage(winId,tabId){
 
 
 function reallyCaptureImage(winId,tabId){
-	chrome.tabs.captureVisibleTab(winId, function(dataUrl){
+    winId = (winId > 0 ? winId : null) || null;
+    chrome.tabs.captureVisibleTab(winId, function(dataUrl){
 		pim.onload=function(){
 			var img = pim;
 			var cvs = example;
