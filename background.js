@@ -9,20 +9,20 @@ var onewin=false;
 var justback=false;
 var thumbwidth=100;
 var thHeiRatio=0.75;
-var currentWindow = 1;//to track which set of tabs to return to the popup.html (invalid at launch!!!)
+var currentWindow = '-1';//to track which set of tabs to return to the popup.html (invalid at launch!!!)
 var tabsWindows=[];
 var storage = chrome.storage.sync || chrome.storage.local;
 var disablelasttab = false;
 
 function mv3_persist_session_storage(){
     // since service worker may be killed any time, we call this often as we make any changes to our needed data objects....
-    console.log('store_to_session_memory_mv3_so_chatty_about_process_memory', selWindows, selwIdx);
-    
-    chrome.storage.session.set({
+    var toSet ={
         selWindows: JSON.stringify(selWindows)
         ,selwIdx: JSON.stringify(selwIdx)
         //,tabImgs: JSON.stringify(tabImgs) // too big to store here
-    }, function(){});
+    }
+    console.log('store_to_session_memory_mv3_so_chatty_about_process_memory', toSet);
+    chrome.storage.session.set(toSet, function(){});
 }
 
 function loadPrefsFromStorage(cbf){
@@ -80,7 +80,7 @@ function fromPrefs(){
 	//justback = ((localStorage["justback"]=='true')?true:false);
 	
 	if(onewin){
-		currentWindow=1;
+		currentWindow=-1;
 		//merge all history somehow....??
 	}else{
 		tabsWindows=[];
@@ -166,13 +166,15 @@ function setCurrentWindow(tabId,selectInfo){
 	historyAdd(currentWindow,tabId);
 }
 chrome.tabs.onActivated.addListener(function(aInfo){
+    console.log('tab onActivated', aInfo)
 	setCurrentWindow(aInfo.tabId,aInfo);
 });
 
 chrome.windows.onFocusChanged.addListener(function(windowId){
 	if(windowId!= chrome.windows.WINDOW_ID_NONE ){
-		currentWindow = windowId;
-
+        if(!onewin){
+            currentWindow= windowId;
+        }
 		// seems like the "current window" may not have history - meaning it is a new window in this case
 		// or maybe the current windows history entries had been moved to another window, or closed ???? 
 	}
@@ -545,6 +547,8 @@ chrome.storage.session.get(['selWindows','selwIdx'], function(stor){
             selwIdx = [];
         }
     }
+    
+    console.log('bg launched and got session storage again...')
     
     fromPrefs();
 });
