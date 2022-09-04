@@ -13,6 +13,7 @@ var currentWindow = '-1';//to track which set of tabs to return to the popup.htm
 var tabsWindows=[];
 var storage = chrome.storage.sync || chrome.storage.local;
 var disablelasttab = false;
+var fully_loaded = false; // mv3...
 
 function mv3_persist_session_storage(){
     // since service worker may be killed any time, we call this often as we make any changes to our needed data objects....
@@ -70,6 +71,7 @@ function fromPrefs(){
             //tim.width=150,tim.height=75;
             thscale=0.09;
         }
+        fully_loaded = true;
     });
     
 	//if(localStorage["maxhistory"]-0 > 0 ) maxHistory = (localStorage["maxhistory"] - 0) + 1;
@@ -287,6 +289,9 @@ chrome.commands.onCommand.addListener(function(command){
 
 chrome.runtime.onMessage.addListener(
 function(request, sender, sendResponse){
+        // now we get messages or other listners, but we're not in a 'loaded' state?.?.? what a nightmare to be forced to use magic?
+        //console.log(request.greeting, 'fully_loaded: ' , fully_loaded);
+    
 		if (request.greeting == "gettabs" && selWindows[currentWindow]){
 			sendResponse({farewell: selWindows[currentWindow]});
 		}else if(request.greeting == "lastab"){
