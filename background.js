@@ -9,7 +9,7 @@ var onewin=false;
 var justback=false;
 var thumbwidth=100;
 var thHeiRatio=0.75;
-var currentWindow = '-1';//to track which set of tabs to return to the popup.html (invalid at launch!!!)
+var currentWindow = -1; //to track which set of tabs to return to the popup.html
 var tabsWindows=[];
 var storage = chrome.storage.sync || chrome.storage.local;
 var disablelasttab = false;
@@ -361,6 +361,7 @@ function reallyCaptureImage(winId,tabId){
     // for some reason, we actually do get a dataURL when using keyboard to trigger last tab... go figgure?  how!?!?!
     //otherwise this seems broken
 
+    winId = (winId > 0 ? winId : null) || null;
     chrome.tabs.captureVisibleTab(winId, function(dataUrl){
         
         console.log('we got a snappy shot dataUrl', dataUrl)
